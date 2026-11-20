@@ -1,0 +1,7 @@
+@extends('layouts.app')
+@section('title', 'My Payslips')
+@section('page-title', 'My Payslips')
+@section('breadcrumb', 'HRMS › Finance › My Payslips')
+@section('content')
+<div class="animate-in"><div class="page-header"><div><h1>My Payslips</h1><p>View your payroll records and net pay.</p></div></div><div class="card border-0 shadow-sm"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th class="ps-4">Pay Period</th><th>Basic Salary</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th class="pe-4">Action</th></tr></thead><tbody>@forelse($payslips as $payslip)<tr><td class="ps-4">{{ $payslip->period?->name ?? $payslip->created_at?->format('M Y') }}</td><td>LRD {{ number_format((float)$payslip->basic_salary_lrd, 2) }}</td><td>LRD {{ number_format((float)$payslip->allowances_lrd, 2) }}</td><td>LRD {{ number_format((float)$payslip->deductions_lrd, 2) }}</td><td class="fw-bold text-success">LRD {{ number_format((float)$payslip->net_pay_lrd, 2) }}</td><td><span class="badge bg-success">{{ $payslip->status }}</span></td><td class="pe-4"><a href="{{ route('payroll.payslip', $payslip->id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf"></i></a></td></tr>@empty<tr><td colspan="7" class="text-center text-muted py-5">No payslips are available yet.</td></tr>@endforelse</tbody></table></div></div></div></div>
+@endsection

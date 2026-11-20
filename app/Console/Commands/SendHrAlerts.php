@@ -1,0 +1,6 @@
+<?php
+namespace App\Console\Commands;
+use App\Models\Employee;
+use App\Services\UserNotificationService;
+use Illuminate\Console\Command;
+class SendHrAlerts extends Command { protected $signature='hr:send-alerts'; protected $description='Send HR expiry and reminder alerts'; public function handle():int { $today=today(); Employee::with(['user','documents'])->active()->get()->each(function($e)use($today){ if($e->contract_end_date && $e->contract_end_date->between($today,$today->copy()->addDays(60))) UserNotificationService::send($e->user,'contract_expiry','Contract expiry reminder',"Your contract ends on {$e->contract_end_date->format('d M Y')}.",['url'=>route('contracts.index')]); foreach($e->documents as $d) if($d->expiry_date && $d->expiry_date->between($today,$today->copy()->addDays(30))) UserNotificationService::send($e->user,'document_expiry','Document expiry reminder',"Your {$d->title} expires on {$d->expiry_date->format('d M Y')}.",['url'=>route('employee.profile')]); }); $this->info('HR alerts processed.'); return self::SUCCESS; } }

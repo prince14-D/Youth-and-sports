@@ -1,0 +1,5 @@
+<?php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('department_communications', function(Blueprint $t){$t->id();$t->foreignId('from_department_id')->constrained('departments');$t->foreignId('to_department_id')->constrained('departments');$t->foreignId('sent_by')->constrained('users');$t->string('reference_no')->unique();$t->string('subject');$t->text('message');$t->string('communication_type')->default('Request');$t->string('attachment_path')->nullable();$t->enum('status',['Submitted','Under Review','Responded','Closed'])->default('Submitted');$t->text('response')->nullable();$t->string('response_attachment_path')->nullable();$t->foreignId('responded_by')->nullable()->constrained('users')->nullOnDelete();$t->timestamp('responded_at')->nullable();$t->timestamps();}); } public function down(): void {Schema::dropIfExists('department_communications');} };

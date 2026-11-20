@@ -1,0 +1,5 @@
+<?php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('department_communication_recipients', function(Blueprint $t){$t->id();$t->foreignId('department_communication_id')->constrained('department_communications', 'id', 'dept_comm_recipients_comm_id_fk')->cascadeOnDelete();$t->foreignId('employee_id')->nullable()->constrained()->nullOnDelete();$t->string('email');$t->timestamp('sent_at')->nullable();$t->timestamp('read_at')->nullable();$t->timestamps();$t->unique(['department_communication_id','email'], 'dept_comm_recipients_comm_email_unique');}); } public function down(): void {Schema::dropIfExists('department_communication_recipients');} };
