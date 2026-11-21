@@ -94,6 +94,7 @@
                             <th>Designation</th>
                             <th>Status</th>
                             <th>Start Date</th>
+                            <th>Contract End</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -123,6 +124,14 @@
                                     </span>
                                 </td>
                                 <td>{{ $contractor->date_joined?->format('d M Y') ?? '—' }}</td>
+                                <td>
+                                    <div>{{ $contractor->contract_end_date?->format('d M Y') ?? 'Not set' }}</div>
+                                    @if($contractor->contract_end_date)
+                                        <small class="{{ $contractor->contract_end_date->isPast() ? 'text-danger' : 'text-muted' }}">
+                                            {{ $contractor->contract_end_date->isPast() ? 'Expired' : today()->diffInDays($contractor->contract_end_date) . ' days remaining' }}
+                                        </small>
+                                    @endif
+                                </td>
                                 <td class="text-end">
                                     <a href="{{ route('contractors.show', $contractor) }}" class="btn btn-sm btn-outline-navy rounded-pill px-3">
                                         View Profile
@@ -131,7 +140,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     No contractor records found.
                                 </td>
                             </tr>

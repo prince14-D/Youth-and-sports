@@ -40,6 +40,8 @@ class Edit extends Component
     public $designation;
     public $date_joined;
     public $supervisor_id;
+    public $contract_duration = '12';
+    public $contract_end_date;
 
     // Banking & Payroll Information
     public $bank_name;
@@ -50,6 +52,27 @@ class Edit extends Component
     public $salary_amount_usd;
 
     public $canEditEmployeeNo = false;
+
+    public function updated($property)
+    {
+        if (in_array($property, ['employment_type', 'date_joined', 'contract_duration'], true)) {
+            $this->calculateContractEndDate();
+        }
+    }
+
+    public function calculateContractEndDate()
+    {
+        if ($this->employment_type !== 'Contract') {
+            $this->contract_end_date = null;
+            return;
+        }
+
+        if ($this->contract_duration !== 'custom' && $this->date_joined && is_numeric($this->contract_duration)) {
+            $this->contract_end_date = \Carbon\Carbon::parse($this->date_joined)
+                ->addMonths((int) $this->contract_duration)
+                ->format('Y-m-d');
+        }
+    }
 
     public function mount(Employee $employee)
     {
@@ -77,6 +100,8 @@ class Edit extends Component
         $this->designation       = $employee->designation;
         $this->date_joined       = $employee->date_joined?->format('Y-m-d');
         $this->supervisor_id     = $employee->supervisor_id;
+        $this->contract_end_date = $employee->contract_end_date?->format('Y-m-d');
+        $this->contract_duration = $employee->contract_end_date ? 'custom' : '12';
 
         $this->bank_name         = $employee->bank_name;
         $this->bank_account      = $employee->bank_account;
@@ -102,6 +127,11 @@ class Edit extends Component
             'employment_status' => 'required|string',
             'photo'            => 'nullable|image|max:5120',
         ];
+
+        if ($this->employment_type === 'Contract') {
+            $rules['contract_duration'] = 'required';
+            $rules['contract_end_date'] = 'required|date|after:date_joined';
+        }
 
         if ($this->canEditEmployeeNo) {
             $rules['employee_no'] = 'required|string|unique:employees,employee_no,' . $this->employee->id;
@@ -148,6 +178,7 @@ class Edit extends Component
             'department_id'      => $this->department_id,
             'designation'        => $this->designation,
             'date_joined'        => $this->date_joined ?: null,
+            'contract_end_date'  => $this->employment_type === 'Contract' ? $this->contract_end_date : null,
             'supervisor_id'      => $this->supervisor_id ?: null,
             'bank_name'          => $this->bank_name ?: null,
             'bank_account'       => $this->bank_account ?: null,

@@ -310,6 +310,35 @@
                             @error('date_joined') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        @if($employment_type === 'Contract')
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold small">Contract Duration <span class="text-danger">*</span></label>
+                            <select wire:model.live="contract_duration" class="form-select @error('contract_duration') is-invalid @enderror">
+                                <option value="3">3 Months</option>
+                                <option value="6">6 Months</option>
+                                <option value="12">1 Year</option>
+                                <option value="24">2 Years</option>
+                                <option value="36">3 Years</option>
+                                <option value="60">5 Years</option>
+                                <option value="custom">Custom End Date</option>
+                            </select>
+                            @error('contract_duration') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        @if($contract_duration === 'custom')
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold small">Contract End Date <span class="text-danger">*</span></label>
+                            <input type="date" wire:model.blur="contract_end_date" min="{{ $date_joined }}" class="form-control @error('contract_end_date') is-invalid @enderror">
+                            @error('contract_end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        @elseif($contract_end_date)
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold small">Calculated Contract End Date</label>
+                            <input type="text" value="{{ \Carbon\Carbon::parse($contract_end_date)->format('d M Y') }}" class="form-control" readonly>
+                        </div>
+                        @endif
+                        @endif
+
                         <div class="col-12 col-md-6">
                             <label class="form-label fw-bold small">Reporting Supervisor</label>
                             <select wire:model.blur="supervisor_id" class="form-select">
@@ -384,6 +413,32 @@
                     <div class="mb-4 p-3 bg-light rounded-3 border">
                         <label class="form-label fw-bold small">Employment Contract Attachment (PDF / Image)</label>
                         <input type="file" wire:model="contract_file" class="form-control">
+                    </div>
+
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-bold small">National ID / Biometric Document</label>
+                        <input type="file" wire:model="id_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-bold small">Academic Certificate / Transcript</label>
+                        <input type="file" wire:model="academic_attachment" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        @if($academic_attachment)
+                            <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ $academic_attachment->getClientOriginalName() }}</small>
+                        @endif
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-bold small">Other Supporting Documents</label>
+                        <input type="file" wire:model="supporting_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
+                        <small class="text-muted d-block mt-2">You can attach certificates, ID documents, CV, appointment letters, or other HR documents.</small>
+                        @if(count($supporting_documents))
+                            <div class="mt-2">
+                                @foreach($supporting_documents as $document)
+                                    <span class="badge bg-white text-navy border me-1 mb-1">{{ $document->getClientOriginalName() }}</span>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
                 @endif

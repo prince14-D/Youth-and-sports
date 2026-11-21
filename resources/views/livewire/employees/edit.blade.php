@@ -137,6 +137,35 @@
                         <label class="form-label fw-bold">Date Joined</label>
                         <input type="date" wire:model.blur="date_joined" class="form-control">
                     </div>
+
+                    @if($employment_type === 'Contract')
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Contract Duration <span class="text-danger">*</span></label>
+                        <select wire:model.live="contract_duration" class="form-select @error('contract_duration') is-invalid @enderror">
+                            <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12">1 Year</option>
+                            <option value="24">2 Years</option>
+                            <option value="36">3 Years</option>
+                            <option value="60">5 Years</option>
+                            <option value="custom">Custom End Date</option>
+                        </select>
+                        @error('contract_duration') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    @if($contract_duration === 'custom')
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Contract End Date <span class="text-danger">*</span></label>
+                        <input type="date" wire:model.blur="contract_end_date" min="{{ $date_joined }}" class="form-control @error('contract_end_date') is-invalid @enderror">
+                        @error('contract_end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    @else
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Calculated Contract End Date</label>
+                        <input type="text" value="{{ $contract_end_date ? \Carbon\Carbon::parse($contract_end_date)->format('d M Y') : '' }}" class="form-control" readonly>
+                    </div>
+                    @endif
+                    @endif
                 </div>
 
                 <!-- SECTION 3: Banking & Financial Details -->

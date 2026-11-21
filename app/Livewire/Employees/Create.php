@@ -93,6 +93,29 @@ class Create extends Component
     public $designation = '';
     public $date_joined = '';
     public $supervisor_id = '';
+    public $contract_duration = '12';
+    public $contract_end_date = '';
+
+    public function updated($property)
+    {
+        if (in_array($property, ['employment_type', 'date_joined', 'contract_duration'], true)) {
+            $this->calculateContractEndDate();
+        }
+    }
+
+    public function calculateContractEndDate()
+    {
+        if ($this->employment_type !== 'Contract') {
+            $this->contract_end_date = '';
+            return;
+        }
+
+        if ($this->contract_duration !== 'custom' && $this->date_joined && is_numeric($this->contract_duration)) {
+            $this->contract_end_date = \Carbon\Carbon::parse($this->date_joined)
+                ->addMonths((int) $this->contract_duration)
+                ->format('Y-m-d');
+        }
+    }
 
     // STEP 3: Banking & Payroll Information
     public $bank_name = '';
@@ -117,6 +140,8 @@ class Create extends Component
     // STEP 6: Document Uploads
     public $contract_file;
     public $id_file;
+    public $academic_attachment;
+    public $supporting_documents = [];
 
     public function mount()
     {
@@ -137,6 +162,19 @@ class Create extends Component
         if ($this->step > 1) {
             $this->step--;
         }
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes <= 0) {
+            return '0 Bytes';
+        }
+
+        $units = ['Bytes', 'KB', 'MB', 'GB'];
+        $unitIndex = (int) floor(log($bytes, 1024));
+        $unitIndex = min($unitIndex, count($units) - 1);
+
+        return round($bytes / (1024 ** $unitIndex), 2) . ' ' . $units[$unitIndex];
     }
 
     public function addEducation()
@@ -220,6 +258,10 @@ class Create extends Component
                 'designation'   => 'required|string',
                 'date_joined'   => 'required|date',
             ];
+            if ($this->employment_type === 'Contract') {
+                $rules['contract_duration'] = 'required';
+                $rules['contract_end_date'] = 'required|date|after:date_joined';
+            }
             if ($this->is_existing_employee) {
                 $rules['employee_no'] = 'required|string|unique:employees,employee_no';
             }
@@ -277,6 +319,7 @@ class Create extends Component
                 'department_id'      => $this->department_id,
                 'designation'        => $this->designation,
                 'date_joined'        => $this->date_joined ?: null,
+                'contract_end_date'  => $this->employment_type === 'Contract' ? $this->contract_end_date : null,
                 'supervisor_id'      => $this->supervisor_id ?: null,
                 'bank_name'          => $this->bank_name ?: null,
                 'bank_account'       => $this->bank_account ?: null,
@@ -336,6 +379,31 @@ class Create extends Component
                     'document_type' => 'id_card',
                     'title'         => 'National ID Card',
                     'file_path'     => $idPath,
+                ]);
+            }
+            if ($this->academic_attachment) {
+                $path = $this->academic_attachment->store('employees/documents', 'public');
+                EmployeeDocument::create([
+                    'employee_id'   => $employee->id,
+                    'document_type' => 'academic',
+                    'title'         => 'Academic Certificate / Attachment',
+                    'file_path'     => $path,
+                    'file_size'     => $this->formatBytes($this->academic_attachment->getSize()),
+                    'mime_type'     => $this->academic_attachment->getMimeType(),
+                ]);
+            }
+            foreach ($this->supporting_documents as $document) {
+                if (!$document) {
+                    continue;
+                }
+                $path = $document->store('employees/documents', 'public');
+                EmployeeDocument::create([
+                    'employee_id'   => $employee->id,
+                    'document_type' => 'supporting',
+                    'title'         => $document->getClientOriginalName(),
+                    'file_path'     => $path,
+                    'file_size'     => $this->formatBytes($document->getSize()),
+                    'mime_type'     => $document->getMimeType(),
                 ]);
             }
 
