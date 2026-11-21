@@ -2,45 +2,528 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Employee Record - {{ $employee->full_name }}</title>
+    <title>Official Employee Personnel Record - {{ $employee->full_name }}</title>
     <style>
-        @page { margin: 30px 34px 48px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #233044; font-size: 10px; line-height: 1.45; }
-        table { border-collapse: collapse; width: 100%; }
-        p { margin: 0; }
-        .top-rule { height: 5px; background: #102c55; margin-bottom: 15px; }
-        .header { border-bottom: 1px solid #dce3ec; padding-bottom: 14px; }
-        .brand-cell { width: 62px; vertical-align: middle; padding: 0 12px 0 0; }
-        .brand-logo { width: 58px; height: 58px; }
-        .brand-fallback { width: 54px; height: 54px; line-height: 54px; background: #102c55; color: #fff; text-align: center; font-size: 15px; font-weight: bold; }
-        .heading-cell { vertical-align: middle; padding: 0; }
-        .eyebrow { color: #64748b; font-size: 8px; font-weight: bold; letter-spacing: 1.1px; text-transform: uppercase; }
-        h1 { color: #102c55; font-size: 19px; line-height: 1.2; margin: 4px 0 3px; }
-        .ministry { color: #526174; font-size: 9px; }
-        .photo-cell { width: 86px; text-align: right; vertical-align: middle; padding: 0 0 0 10px; }
-        .profile-photo { width: 74px; height: 82px; border: 2px solid #e1e7ef; }
-        .photo-fallback { width: 74px; height: 82px; line-height: 82px; background: #eef3f8; border: 2px solid #e1e7ef; color: #102c55; font-size: 18px; font-weight: bold; text-align: center; }
-        .employee-name { color: #102c55; font-size: 12px; font-weight: bold; margin-top: 6px; }
-        .summary { margin: 14px 0 18px; }
-        .summary td { width: 25%; background: #f3f6fa; border-right: 3px solid #fff; padding: 8px 9px; vertical-align: top; }
-        .summary td:last-child { border-right: 0; }
-        .summary-label, .field-label { color: #718096; font-size: 7.5px; font-weight: bold; letter-spacing: .45px; text-transform: uppercase; }
-        .summary-value { color: #102c55; font-size: 9px; font-weight: bold; margin-top: 3px; }
-        .section { margin-top: 16px; page-break-inside: avoid; }
-        .section-title { border-bottom: 1px solid #dce3ec; color: #102c55; font-size: 11px; font-weight: bold; margin: 0 0 7px; padding: 0 0 5px; }
-        .section-number { color: #d72e36; padding-right: 5px; }
-        .section-note { color: #8793a3; float: right; font-size: 7px; font-weight: normal; letter-spacing: .45px; text-transform: uppercase; }
-        .details td { width: 50%; border-bottom: 1px solid #edf0f4; padding: 6px 8px 6px 0; vertical-align: top; }
-        .details .wide { width: 100%; }
-        .field-value { color: #253449; font-size: 9px; margin-top: 2px; word-wrap: break-word; }
-        .data-table { margin-top: 3px; }
-        .data-table th { background: #eef2f7; border-bottom: 1px solid #dce3ec; color: #526174; font-size: 7.5px; font-weight: bold; letter-spacing: .35px; padding: 6px 7px; text-align: left; text-transform: uppercase; }
-        .data-table td { border-bottom: 1px solid #edf0f4; color: #253449; font-size: 8.5px; padding: 6px 7px; text-align: left; vertical-align: top; word-wrap: break-word; }
-        .empty { background: #f8fafc; color: #788596; font-size: 9px; padding: 9px; }
-        .status { background: #e8f4ec; color: #247044; font-size: 8px; font-weight: bold; padding: 3px 6px; }
-        .footer { position: fixed; bottom: -31px; left: 0; right: 0; border-top: 1px solid #dce3ec; color: #718096; font-size: 7px; padding-top: 6px; }
-        .footer-left { float: left; }
-        .footer-right { float: right; }
+        @page {
+            margin: 18px 26px 38px 26px;
+        }
+
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            color: #111827;
+            font-size: 8.6px;
+            line-height: 1.32;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        /* ── Logo-Color Top Accent Bands (Deep Navy #07144A + Crimson #D41920) ── */
+        .brand-bar-navy {
+            height: 4.5px;
+            background: #07144A;
+        }
+
+        .brand-bar-red {
+            height: 2px;
+            background: #D41920;
+            margin-bottom: 7px;
+        }
+
+        /* ── Official Form Masthead ── */
+        .masthead {
+            border: 1.25px solid #07144A;
+            margin-bottom: 6px;
+        }
+
+        .masthead td {
+            vertical-align: middle;
+            padding: 6px 8px;
+        }
+
+        .masthead-logo-cell {
+            width: 68px;
+            text-align: center;
+            border-right: 1px solid #C7D0E0;
+            background: #FFFFFF;
+        }
+
+        .brand-logo {
+            width: 58px;
+            height: 58px;
+        }
+
+        .brand-fallback {
+            width: 54px;
+            height: 54px;
+            line-height: 54px;
+            background: #07144A;
+            color: #FFFFFF;
+            border: 2px solid #D41920;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+
+        .masthead-title-cell {
+            text-align: center;
+            background: #FFFFFF;
+            padding: 5px 8px;
+        }
+
+        .republic-label {
+            color: #D41920;
+            font-size: 7.5px;
+            font-weight: bold;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+        }
+
+        .ministry-name {
+            color: #07144A;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            margin: 1.5px 0 1px;
+        }
+
+        .dept-subtitle {
+            color: #0E2380;
+            font-size: 7.5px;
+            font-weight: bold;
+            letter-spacing: 0.85px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .form-banner {
+            display: inline-block;
+            background: #07144A;
+            color: #FFFFFF;
+            font-size: 8.4px;
+            font-weight: bold;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+            padding: 3px 11px;
+            border-bottom: 2px solid #D41920;
+        }
+
+        .masthead-photo-cell {
+            width: 82px;
+            text-align: center;
+            border-left: 1px solid #C7D0E0;
+            background: #F7F8FC;
+            padding: 5px;
+        }
+
+        .photo-frame {
+            width: 64px;
+            height: 70px;
+            border: 1px solid #07144A;
+            background: #FFFFFF;
+            margin: 0 auto;
+        }
+
+        .photo-frame td {
+            padding: 2px;
+            text-align: center;
+            vertical-align: middle;
+            height: 66px;
+        }
+
+        .profile-photo {
+            max-width: 60px;
+            max-height: 66px;
+        }
+
+        .photo-initials {
+            color: #07144A;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .photo-caption {
+            color: #4B5A73;
+            font-size: 6px;
+            font-weight: bold;
+            letter-spacing: 0.55px;
+            text-transform: uppercase;
+            margin-top: 2.5px;
+        }
+
+        /* ── Official Control Reference Strip ── */
+        .control-strip {
+            margin-bottom: 7px;
+            border: 1px solid #07144A;
+        }
+
+        .control-strip td {
+            width: 25%;
+            background: #F2F4FA;
+            border-right: 1px solid #C7D0E0;
+            padding: 4px 7px;
+            vertical-align: top;
+        }
+
+        .control-strip td:last-child {
+            border-right: 0;
+        }
+
+        .ctrl-label {
+            color: #0E2380;
+            font-size: 6.3px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 1.5px;
+        }
+
+        .ctrl-value {
+            color: #07144A;
+            font-size: 8.5px;
+            font-weight: bold;
+        }
+
+        /* ── Status Badges ── */
+        .status-badge {
+            display: inline-block;
+            font-size: 7.2px;
+            font-weight: bold;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            padding: 1px 5.5px;
+            border: 1px solid transparent;
+        }
+
+        .status-active {
+            background: #E8F5EE;
+            color: #146338;
+            border-color: #9ED3B5;
+        }
+
+        .status-suspended {
+            background: #FEF5E6;
+            color: #9A5B00;
+            border-color: #F2C97D;
+        }
+
+        .status-terminated {
+            background: #FDECEC;
+            color: #B4141A;
+            border-color: #EFA8AA;
+        }
+
+        .status-neutral {
+            background: #EEF1F6;
+            color: #374151;
+            border-color: #C7D0E0;
+        }
+
+        /* ── Form Section Headers ── */
+        .section-block {
+            margin-top: 6.5px;
+        }
+
+        .section-header {
+            width: 100%;
+            background: #07144A;
+            color: #FFFFFF;
+            border: 1px solid #07144A;
+            page-break-after: avoid;
+        }
+
+        .section-header td {
+            padding: 3.5px 7px;
+            vertical-align: middle;
+        }
+
+        .section-code-cell {
+            width: 62px;
+            background: #D41920;
+            color: #FFFFFF;
+            font-size: 7.2px;
+            font-weight: bold;
+            letter-spacing: 0.65px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .section-title-cell {
+            color: #FFFFFF;
+            font-size: 8.1px;
+            font-weight: bold;
+            letter-spacing: 0.55px;
+            text-transform: uppercase;
+        }
+
+        .section-note-cell {
+            width: 130px;
+            text-align: right;
+            color: #D5DDF0;
+            font-size: 6.5px;
+            letter-spacing: 0.45px;
+            text-transform: uppercase;
+        }
+
+        /* ── Bordered Form Field Grid ── */
+        .form-grid {
+            border-left: 1px solid #07144A;
+            border-right: 1px solid #07144A;
+            border-bottom: 1px solid #07144A;
+        }
+
+        .form-grid td {
+            border-top: 1px solid #CFD7E6;
+            border-right: 1px solid #CFD7E6;
+            padding: 3.5px 6.5px 4px;
+            vertical-align: top;
+            background: #FFFFFF;
+        }
+
+        .form-grid tr:first-child td {
+            border-top: 0;
+        }
+
+        .form-grid td:last-child {
+            border-right: 0;
+        }
+
+        .w-50 { width: 50%; }
+        .w-33 { width: 33.33%; }
+        .w-25 { width: 25%; }
+        .w-100 { width: 100%; }
+
+        .field-label {
+            color: #4B5A73;
+            font-size: 6.3px;
+            font-weight: bold;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            margin-bottom: 1.5px;
+        }
+
+        .field-value {
+            color: #111827;
+            font-size: 8.4px;
+            font-weight: normal;
+            word-wrap: break-word;
+            min-height: 10px;
+        }
+
+        .field-value-strong {
+            color: #07144A;
+            font-weight: bold;
+        }
+
+        .muted-dash {
+            color: #9CA3AF;
+        }
+
+        /* ── Form Sub-Bar (Certifications under Section D) ── */
+        .sub-header-bar {
+            background: #EEF1F8;
+            border-left: 1px solid #07144A;
+            border-right: 1px solid #07144A;
+            border-bottom: 1px solid #C7D0E0;
+            color: #07144A;
+            font-size: 7.1px;
+            font-weight: bold;
+            letter-spacing: 0.45px;
+            text-transform: uppercase;
+            padding: 3.5px 7px;
+            page-break-after: avoid;
+        }
+
+        /* ── Structured Data Tables inside Form Sections ── */
+        .form-table {
+            border-left: 1px solid #07144A;
+            border-right: 1px solid #07144A;
+            border-bottom: 1px solid #07144A;
+        }
+
+        .form-table th {
+            background: #F2F4FA;
+            border-bottom: 1px solid #B8C4DA;
+            border-right: 1px solid #CFD7E6;
+            color: #0E2380;
+            font-size: 6.5px;
+            font-weight: bold;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+            padding: 3.5px 5.5px;
+            text-align: left;
+        }
+
+        .form-table th:last-child,
+        .form-table td:last-child {
+            border-right: 0;
+        }
+
+        .form-table td {
+            border-top: 1px solid #DCE3EF;
+            border-right: 1px solid #DCE3EF;
+            color: #111827;
+            font-size: 8px;
+            padding: 3.5px 5.5px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .form-table tbody tr:nth-child(even) td {
+            background: #FAFBFD;
+        }
+
+        .col-num {
+            width: 20px;
+            text-align: center !important;
+            color: #4B5A73;
+            font-weight: bold;
+        }
+
+        .primary-tag {
+            display: inline-block;
+            background: #07144A;
+            color: #FFFFFF;
+            font-size: 6px;
+            font-weight: bold;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+            padding: 1px 4px;
+            margin-left: 4px;
+        }
+
+        .empty-row {
+            color: #6B7280;
+            font-style: italic;
+            font-size: 7.8px;
+            text-align: center;
+            padding: 5.5px !important;
+            background: #FAFBFD;
+        }
+
+        /* ── Official HR Verification & Sign-Off Block ── */
+        .verification-wrap {
+            margin-top: 7.5px;
+            page-break-inside: avoid;
+        }
+
+        .declaration-box {
+            border-left: 1px solid #07144A;
+            border-right: 1px solid #07144A;
+            border-bottom: 1px solid #CFD7E6;
+            background: #FAFBFD;
+            color: #374151;
+            font-size: 7.4px;
+            line-height: 1.38;
+            padding: 4.5px 7px;
+        }
+
+        .signature-grid {
+            border-left: 1px solid #07144A;
+            border-right: 1px solid #07144A;
+            border-bottom: 1px solid #07144A;
+        }
+
+        .signature-grid > tbody > tr > td,
+        .signature-grid > tr > td {
+            width: 33.33%;
+            border-right: 1px solid #CFD7E6;
+            padding: 6px 8px 6px;
+            vertical-align: bottom;
+            background: #FFFFFF;
+        }
+
+        .signature-grid > tbody > tr > td:last-child,
+        .signature-grid > tr > td:last-child {
+            border-right: 0;
+            vertical-align: middle;
+        }
+
+        .sig-space {
+            height: 20px;
+            border-bottom: 1px solid #6B7280;
+            margin-bottom: 3px;
+        }
+
+        .sig-role {
+            color: #07144A;
+            font-size: 7px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .sig-date {
+            color: #6B7280;
+            font-size: 6.8px;
+            margin-top: 3px;
+        }
+
+        .stamp-table {
+            width: 100%;
+            border: 1px dashed #8B9BB8;
+            background: #F7F8FC;
+        }
+
+        .stamp-table td {
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            color: #6B7B99;
+            font-size: 6.6px;
+            font-weight: bold;
+            letter-spacing: 0.65px;
+            text-transform: uppercase;
+            padding: 4px;
+        }
+
+        /* ── Fixed Page Footer ── */
+        .footer {
+            position: fixed;
+            bottom: -22px;
+            left: 0;
+            right: 0;
+            border-top: 1.5px solid #07144A;
+            padding-top: 4px;
+        }
+
+        .footer td {
+            font-size: 6.6px;
+            color: #4B5A73;
+            vertical-align: middle;
+        }
+
+        .footer-left {
+            text-align: left;
+            font-weight: bold;
+            color: #07144A;
+            letter-spacing: 0.35px;
+        }
+
+        .footer-center {
+            text-align: center;
+        }
+
+        .footer-right {
+            text-align: right;
+            font-weight: bold;
+            color: #D41920;
+        }
+
+        .page-num::after {
+            content: "Page " counter(page);
+        }
     </style>
 </head>
 <body>
@@ -49,133 +532,310 @@
         $ministryLogo = is_file($logoPath)
             ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
             : null;
+
+        $firstName = trim((string) ($employee->first_name ?? ''));
+        $middleName = trim((string) ($employee->middle_name ?? ''));
+        $lastName = trim((string) ($employee->last_name ?? ''));
+
+        $statusRaw = trim((string) ($employee->employment_status ?: 'Unknown'));
+        $statusClass = match (strtolower($statusRaw)) {
+            'active' => 'status-active',
+            'suspended', 'on leave' => 'status-suspended',
+            'terminated', 'dismissed' => 'status-terminated',
+            default => 'status-neutral',
+        };
+
+        $initials = strtoupper(
+            mb_substr($firstName, 0, 1) . mb_substr($lastName, 0, 1)
+        ) ?: 'MYS';
     @endphp
 
-    <div class="top-rule"></div>
-    <table class="header">
+    {{-- Top Official Brand Accent Bars --}}
+    <div class="brand-bar-navy"></div>
+    <div class="brand-bar-red"></div>
+
+    {{-- Official Form Masthead --}}
+    <table class="masthead">
         <tr>
-            <td class="brand-cell">
+            <td class="masthead-logo-cell">
                 @if($ministryLogo)
                     <img src="{{ $ministryLogo }}" class="brand-logo" alt="Ministry of Youth and Sports">
                 @else
                     <div class="brand-fallback">MYS</div>
                 @endif
             </td>
-            <td class="heading-cell">
-                <div class="eyebrow">Republic of Liberia · Human Resources</div>
-                <h1>Employee Record</h1>
-                <p class="ministry">Ministry of Youth &amp; Sports</p>
-                <p class="employee-name">{{ $employee->full_name }}</p>
+            <td class="masthead-title-cell">
+                <div class="republic-label">Republic of Liberia</div>
+                <div class="ministry-name">Ministry of Youth &amp; Sports</div>
+                <div class="dept-subtitle">Department of Human Resources Management</div>
+                <div class="form-banner">Official Employee Personnel Record Form</div>
             </td>
-            <td class="photo-cell">
-                @if($profilePhoto ?? null)
-                    <img src="{{ $profilePhoto }}" class="profile-photo" alt="Employee profile photo">
-                @else
-                    <div class="photo-fallback">{{ strtoupper(substr($employee->first_name, 0, 1) . substr($employee->last_name, 0, 1)) }}</div>
-                @endif
+            <td class="masthead-photo-cell">
+                <table class="photo-frame">
+                    <tr>
+                        <td>
+                            @if($profilePhoto ?? null)
+                                <img src="{{ $profilePhoto }}" class="profile-photo" alt="Employee photo">
+                            @else
+                                <div class="photo-initials">{{ $initials }}</div>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+                <div class="photo-caption">Passport Photo</div>
             </td>
         </tr>
     </table>
 
-    <table class="summary">
+    {{-- Official Control & Reference Strip --}}
+    <table class="control-strip">
         <tr>
-            <td><div class="summary-label">Employee ID</div><div class="summary-value">{{ $employee->employee_no ?: '—' }}</div></td>
-            <td><div class="summary-label">Department</div><div class="summary-value">{{ $employee->department?->name ?? 'Unassigned' }}</div></td>
-            <td><div class="summary-label">Employment Type</div><div class="summary-value">{{ $employee->employment_type ?: '—' }}</div></td>
-            <td><div class="summary-label">Status</div><div class="summary-value"><span class="status">{{ $employee->employment_status ?: 'Unknown' }}</span></div></td>
+            <td>
+                <div class="ctrl-label">Employee ID No.</div>
+                <div class="ctrl-value">{{ $employee->employee_no ?: '—' }}</div>
+            </td>
+            <td>
+                <div class="ctrl-label">Personnel / CSA No.</div>
+                <div class="ctrl-value">{{ $employee->personnel_number ?: '—' }}</div>
+            </td>
+            <td>
+                <div class="ctrl-label">Employment Status</div>
+                <div class="ctrl-value"><span class="status-badge {{ $statusClass }}">{{ $statusRaw }}</span></div>
+            </td>
+            <td>
+                <div class="ctrl-label">Form Ref. / Date Issued</div>
+                <div class="ctrl-value">MYS-HR-01 · {{ now()->format('d M Y') }}</div>
+            </td>
         </tr>
     </table>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">01</span>Personal Information <span class="section-note">Identity &amp; contact</span></h2>
-        <table class="details">
+    {{-- SECTION A: PERSONAL & DEMOGRAPHIC DETAILS --}}
+    <div class="section-block">
+        <table class="section-header">
             <tr>
-                <td><div class="field-label">Full Name</div><div class="field-value">{{ $employee->full_name }}</div></td>
-                <td><div class="field-label">Gender</div><div class="field-value">{{ $employee->gender ?: '—' }}</div></td>
+                <td class="section-code-cell">Section A</td>
+                <td class="section-title-cell">Personal &amp; Demographic Information</td>
+                <td class="section-note-cell">Identity &amp; Contact</td>
+            </tr>
+        </table>
+        <table class="form-grid">
+            <tr>
+                <td class="w-33">
+                    <div class="field-label">First Name</div>
+                    <div class="field-value field-value-strong">{{ $firstName ?: '—' }}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Middle Name</div>
+                    <div class="field-value">{!! $middleName !== '' ? e($middleName) : '<span class="muted-dash">—</span>' !!}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Last Name / Surname</div>
+                    <div class="field-value field-value-strong">{{ $lastName ?: '—' }}</div>
+                </td>
             </tr>
             <tr>
-                <td><div class="field-label">Date of Birth</div><div class="field-value">{{ $employee->date_of_birth?->format('d M Y') ?? '—' }}</div></td>
-                <td><div class="field-label">Nationality</div><div class="field-value">{{ $employee->nationality ?: '—' }}</div></td>
+                <td class="w-33">
+                    <div class="field-label">Gender</div>
+                    <div class="field-value">{{ $employee->gender ?: '—' }}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Date of Birth</div>
+                    <div class="field-value">
+                        @if($employee->date_of_birth)
+                            {{ $employee->date_of_birth->format('d M Y') }}@if($employee->age > 0) ({{ $employee->age }} yrs)@endif
+                        @else
+                            <span class="muted-dash">—</span>
+                        @endif
+                    </div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Marital Status</div>
+                    <div class="field-value">{{ $employee->marital_status ?: '—' }}</div>
+                </td>
             </tr>
             <tr>
-                <td><div class="field-label">County of Birth</div><div class="field-value">{{ $employee->county_of_birth ?: '—' }}</div></td>
-                <td><div class="field-label">Marital Status</div><div class="field-value">{{ $employee->marital_status ?: '—' }}</div></td>
+                <td class="w-33">
+                    <div class="field-label">Nationality</div>
+                    <div class="field-value">{{ $employee->nationality ?: '—' }}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">County of Birth</div>
+                    <div class="field-value">{{ $employee->county_of_birth ?: '—' }}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Phone Number</div>
+                    <div class="field-value">{{ $employee->phone ?: '—' }}</div>
+                </td>
+            </tr>
+        </table>
+        <table class="form-grid" style="border-top: 0;">
+            <tr>
+                <td class="w-50" style="border-top: 1px solid #CFD7E6;">
+                    <div class="field-label">Personal Email Address</div>
+                    <div class="field-value">{{ $employee->personal_email ?: '—' }}</div>
+                </td>
+                <td class="w-50" style="border-top: 1px solid #CFD7E6;">
+                    <div class="field-label">Official Ministry Email</div>
+                    <div class="field-value">{{ $employee->official_email ?: '—' }}</div>
+                </td>
             </tr>
             <tr>
-                <td><div class="field-label">Phone</div><div class="field-value">{{ $employee->phone ?: '—' }}</div></td>
-                <td><div class="field-label">Personal Email</div><div class="field-value">{{ $employee->personal_email ?: '—' }}</div></td>
-            </tr>
-            <tr>
-                <td colspan="2"><div class="field-label">Address</div><div class="field-value">{{ $employee->address ?: '—' }}</div></td>
+                <td colspan="2">
+                    <div class="field-label">Residential Address</div>
+                    <div class="field-value">{{ $employee->address ?: '—' }}</div>
+                </td>
             </tr>
         </table>
     </div>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">02</span>Employment Information <span class="section-note">Appointment details</span></h2>
-        <table class="details">
+    {{-- SECTION B: APPOINTMENT & EMPLOYMENT DETAILS --}}
+    <div class="section-block">
+        <table class="section-header">
             <tr>
-                <td><div class="field-label">Official Email</div><div class="field-value">{{ $employee->official_email ?: '—' }}</div></td>
-                <td><div class="field-label">Personnel Number</div><div class="field-value">{{ $employee->personnel_number ?: '—' }}</div></td>
+                <td class="section-code-cell">Section B</td>
+                <td class="section-title-cell">Appointment &amp; Employment Details</td>
+                <td class="section-note-cell">Official Posting</td>
+            </tr>
+        </table>
+        <table class="form-grid">
+            <tr>
+                <td class="w-50">
+                    <div class="field-label">Department / Division</div>
+                    <div class="field-value field-value-strong">{{ $employee->department?->name ?? 'Unassigned' }}</div>
+                </td>
+                <td class="w-50">
+                    <div class="field-label">Designation / Job Title</div>
+                    <div class="field-value field-value-strong">{{ $employee->designation ?: ($employee->job_title ?: '—') }}</div>
+                </td>
+            </tr>
+        </table>
+        <table class="form-grid" style="border-top: 0;">
+            <tr>
+                <td class="w-33" style="border-top: 1px solid #CFD7E6;">
+                    <div class="field-label">Employment Type</div>
+                    <div class="field-value">{{ $employee->employment_type ?: '—' }}</div>
+                </td>
+                <td class="w-33" style="border-top: 1px solid #CFD7E6;">
+                    <div class="field-label">Salary Grade</div>
+                    <div class="field-value">{{ $employee->salary_grade ?: '—' }}</div>
+                </td>
+                <td class="w-33" style="border-top: 1px solid #CFD7E6;">
+                    <div class="field-label">Direct Supervisor</div>
+                    <div class="field-value">{{ $employee->supervisor?->full_name ?? '—' }}</div>
+                </td>
             </tr>
             <tr>
-                <td><div class="field-label">Department</div><div class="field-value">{{ $employee->department?->name ?? 'Unassigned' }}</div></td>
-                <td><div class="field-label">Designation / Job Title</div><div class="field-value">{{ $employee->designation ?: ($employee->job_title ?: '—') }}</div></td>
-            </tr>
-            <tr>
-                <td><div class="field-label">Date Joined</div><div class="field-value">{{ $employee->date_joined?->format('d M Y') ?? '—' }}</div></td>
-                <td><div class="field-label">Contract End Date</div><div class="field-value">{{ $employee->contract_end_date?->format('d M Y') ?? '—' }}</div></td>
-            </tr>
-            <tr>
-                <td><div class="field-label">Supervisor</div><div class="field-value">{{ $employee->supervisor?->full_name ?? '—' }}</div></td>
-                <td><div class="field-label">Salary Grade</div><div class="field-value">{{ $employee->salary_grade ?: '—' }}</div></td>
+                <td class="w-33">
+                    <div class="field-label">Date Joined / Appointed</div>
+                    <div class="field-value">{{ $employee->date_joined?->format('d M Y') ?? '—' }}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Length of Service</div>
+                    <div class="field-value">{{ $employee->years_of_service ?: '—' }}</div>
+                </td>
+                <td class="w-33">
+                    <div class="field-label">Contract End Date</div>
+                    <div class="field-value">{{ $employee->contract_end_date?->format('d M Y') ?? 'N/A' }}</div>
+                </td>
             </tr>
         </table>
     </div>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">03</span>Payroll &amp; Banking <span class="section-note">Confidential</span></h2>
-        <table class="details">
+    {{-- SECTION C: PAYROLL, BANKING & STATUTORY INFORMATION --}}
+    <div class="section-block">
+        <table class="section-header">
             <tr>
-                <td><div class="field-label">Basic Salary (LRD)</div><div class="field-value">LRD {{ number_format((float) $employee->salary_amount_lrd, 2) }}</div></td>
-                <td><div class="field-label">Basic Salary (USD)</div><div class="field-value">USD {{ number_format((float) $employee->salary_amount_usd, 2) }}</div></td>
+                <td class="section-code-cell">Section C</td>
+                <td class="section-title-cell">Payroll, Banking &amp; Statutory Details</td>
+                <td class="section-note-cell">Strictly Confidential</td>
+            </tr>
+        </table>
+        <table class="form-grid">
+            <tr>
+                <td class="w-50">
+                    <div class="field-label">Basic Salary (LRD)</div>
+                    <div class="field-value field-value-strong">LRD {{ number_format((float) $employee->salary_amount_lrd, 2) }}</div>
+                </td>
+                <td class="w-50">
+                    <div class="field-label">Basic Salary (USD)</div>
+                    <div class="field-value field-value-strong">USD {{ number_format((float) $employee->salary_amount_usd, 2) }}</div>
+                </td>
             </tr>
             <tr>
-                <td><div class="field-label">Bank Name</div><div class="field-value">{{ $employee->bank_name ?: '—' }}</div></td>
-                <td><div class="field-label">Bank Account Number</div><div class="field-value">{{ $employee->bank_account ?: '—' }}</div></td>
+                <td class="w-50">
+                    <div class="field-label">Bank Name</div>
+                    <div class="field-value">{{ $employee->bank_name ?: '—' }}</div>
+                </td>
+                <td class="w-50">
+                    <div class="field-label">Bank Account Number</div>
+                    <div class="field-value">{{ $employee->bank_account ?: '—' }}</div>
+                </td>
             </tr>
             <tr>
-                <td><div class="field-label">TIN Number</div><div class="field-value">{{ $employee->tin_number ?: '—' }}</div></td>
-                <td><div class="field-label">Social Security Number</div><div class="field-value">{{ $employee->social_security_no ?: '—' }}</div></td>
+                <td class="w-50">
+                    <div class="field-label">Tax Identification Number (TIN)</div>
+                    <div class="field-value">{{ $employee->tin_number ?: '—' }}</div>
+                </td>
+                <td class="w-50">
+                    <div class="field-label">Social Security Number (NASSCORP)</div>
+                    <div class="field-value">{{ $employee->social_security_no ?: '—' }}</div>
+                </td>
             </tr>
         </table>
     </div>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">04</span>Education &amp; Certifications</h2>
-        @if($employee->education->isNotEmpty())
-            <table class="data-table">
-                <thead><tr><th>Institution</th><th>Qualification</th><th>Field of Study</th><th>Year</th></tr></thead>
-                <tbody>
-                    @foreach($employee->education as $education)
-                        <tr>
-                            <td>{{ $education->institution ?: '—' }}</td>
-                            <td>{{ $education->qualification ?: '—' }}</td>
-                            <td>{{ $education->field_of_study ?: '—' }}</td>
-                            <td>{{ $education->year_obtained ?: ($education->graduation_year ?? '—') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <div class="empty">No education records added.</div>
-        @endif
+    {{-- SECTION D: ACADEMIC QUALIFICATIONS & CERTIFICATIONS --}}
+    <div class="section-block">
+        <table class="section-header">
+            <tr>
+                <td class="section-code-cell">Section D</td>
+                <td class="section-title-cell">Academic Qualifications &amp; Certifications</td>
+                <td class="section-note-cell">Education Record</td>
+            </tr>
+        </table>
+        <table class="form-table">
+            <thead>
+                <tr>
+                    <th class="col-num">#</th>
+                    <th style="width: 34%;">Institution</th>
+                    <th style="width: 24%;">Qualification / Degree</th>
+                    <th style="width: 27%;">Field of Study</th>
+                    <th style="width: 10%;">Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($employee->education as $index => $education)
+                    <tr>
+                        <td class="col-num">{{ $index + 1 }}</td>
+                        <td>{{ $education->institution ?: '—' }}</td>
+                        <td>{{ $education->qualification ?: '—' }}</td>
+                        <td>{{ $education->field_of_study ?: '—' }}</td>
+                        <td>{{ $education->year_obtained ?: '—' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="empty-row">No academic qualification records on file.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
         @if($employee->certifications->isNotEmpty())
-            <table class="data-table" style="margin-top: 8px;">
-                <thead><tr><th>Certification</th><th>Issuing Organization</th><th>Issue Date</th><th>Expiry Date</th></tr></thead>
+            <div class="sub-header-bar">Professional Certifications &amp; Licenses</div>
+            <table class="form-table">
+                <thead>
+                    <tr>
+                        <th class="col-num">#</th>
+                        <th style="width: 34%;">Certification / License</th>
+                        <th style="width: 30%;">Issuing Body</th>
+                        <th style="width: 16%;">Issue Date</th>
+                        <th style="width: 15%;">Expiry Date</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    @foreach($employee->certifications as $certification)
+                    @foreach($employee->certifications as $index => $certification)
                         <tr>
+                            <td class="col-num">{{ $index + 1 }}</td>
                             <td>{{ $certification->name ?: '—' }}</td>
                             <td>{{ $certification->issuing_body ?: '—' }}</td>
                             <td>{{ $certification->issue_date?->format('d M Y') ?? '—' }}</td>
@@ -187,62 +847,129 @@
         @endif
     </div>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">05</span>Next of Kin</h2>
-        @if($employee->nextOfKin->isNotEmpty())
-            <table class="data-table">
-                <thead><tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th><th>Address</th></tr></thead>
-                <tbody>
-                    @foreach($employee->nextOfKin as $kin)
-                        <tr><td>{{ $kin->name }}</td><td>{{ $kin->relationship }}</td><td>{{ $kin->phone ?: '—' }}</td><td>{{ $kin->email ?: '—' }}</td><td>{{ $kin->address ?: '—' }}</td></tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <div class="empty">No next-of-kin records added.</div>
-        @endif
+    {{-- SECTION E: NEXT OF KIN --}}
+    <div class="section-block">
+        <table class="section-header">
+            <tr>
+                <td class="section-code-cell">Section E</td>
+                <td class="section-title-cell">Next of Kin</td>
+                <td class="section-note-cell">Beneficiary Contact</td>
+            </tr>
+        </table>
+        <table class="form-table">
+            <thead>
+                <tr>
+                    <th class="col-num">#</th>
+                    <th style="width: 24%;">Full Name</th>
+                    <th style="width: 14%;">Relationship</th>
+                    <th style="width: 15%;">Phone</th>
+                    <th style="width: 21%;">Email</th>
+                    <th style="width: 21%;">Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($employee->nextOfKin as $index => $kin)
+                    <tr>
+                        <td class="col-num">{{ $index + 1 }}</td>
+                        <td>
+                            {{ $kin->name ?: '—' }}
+                            @if($kin->is_primary)
+                                <span class="primary-tag">Primary</span>
+                            @endif
+                        </td>
+                        <td>{{ $kin->relationship ?: '—' }}</td>
+                        <td>{{ $kin->phone ?: '—' }}</td>
+                        <td>{{ $kin->email ?: '—' }}</td>
+                        <td>{{ $kin->address ?: '—' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="empty-row">No next-of-kin records on file.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">06</span>Emergency Contacts</h2>
-        @if($employee->emergencyContacts->isNotEmpty())
-            <table class="data-table">
-                <thead><tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th></tr></thead>
-                <tbody>
-                    @foreach($employee->emergencyContacts as $contact)
-                        <tr><td>{{ $contact->name }}</td><td>{{ $contact->relationship }}</td><td>{{ $contact->phone }}</td><td>{{ $contact->email ?: '—' }}</td></tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <div class="empty">No emergency contacts added.</div>
-        @endif
+    {{-- SECTION F: EMERGENCY CONTACTS --}}
+    <div class="section-block">
+        <table class="section-header">
+            <tr>
+                <td class="section-code-cell">Section F</td>
+                <td class="section-title-cell">Emergency Contacts</td>
+                <td class="section-note-cell">Urgent Notification</td>
+            </tr>
+        </table>
+        <table class="form-table">
+            <thead>
+                <tr>
+                    <th class="col-num">#</th>
+                    <th style="width: 30%;">Full Name</th>
+                    <th style="width: 18%;">Relationship</th>
+                    <th style="width: 20%;">Phone Number</th>
+                    <th style="width: 27%;">Email Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($employee->emergencyContacts as $index => $contact)
+                    <tr>
+                        <td class="col-num">{{ $index + 1 }}</td>
+                        <td>{{ $contact->name ?: '—' }}</td>
+                        <td>{{ $contact->relationship ?: '—' }}</td>
+                        <td>{{ $contact->phone ?: '—' }}</td>
+                        <td>{{ $contact->email ?: '—' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="empty-row">No emergency contacts on file.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 
-    <div class="section">
-        <h2 class="section-title"><span class="section-number">07</span>Supporting Documents</h2>
-        @if($employee->documents->isNotEmpty())
-            <table class="data-table">
-                <thead><tr><th>Document</th><th>Type</th><th>Expiry Date</th><th>File Size</th></tr></thead>
-                <tbody>
-                    @foreach($employee->documents as $document)
+    {{-- SECTION G: OFFICIAL CERTIFICATION & HR VERIFICATION --}}
+    <div class="verification-wrap">
+        <table class="section-header">
+            <tr>
+                <td class="section-code-cell">Section G</td>
+                <td class="section-title-cell">Official Certification &amp; HR Verification</td>
+                <td class="section-note-cell">For Official Use</td>
+            </tr>
+        </table>
+        <div class="declaration-box">
+            I hereby certify that the particulars recorded on this Official Employee Personnel Record Form accurately reflect the official human resources records maintained by the Ministry of Youth &amp; Sports, Republic of Liberia.
+        </div>
+        <table class="signature-grid">
+            <tr>
+                <td>
+                    <div class="sig-space"></div>
+                    <div class="sig-role">Employee Signature</div>
+                    <div class="sig-date">Date: ______ / ______ / __________</div>
+                </td>
+                <td>
+                    <div class="sig-space"></div>
+                    <div class="sig-role">Director / HR Officer Signature</div>
+                    <div class="sig-date">Date: ______ / ______ / __________</div>
+                </td>
+                <td>
+                    <table class="stamp-table">
                         <tr>
-                            <td>{{ $document->title }}</td>
-                            <td>{{ ucfirst(str_replace('_', ' ', $document->document_type)) }}</td>
-                            <td>{{ $document->expiry_date?->format('d M Y') ?? '—' }}</td>
-                            <td>{{ $document->file_size ?? '—' }}</td>
+                            <td>Official Ministry Stamp / Seal</td>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <div class="empty">No document attachments added.</div>
-        @endif
+                    </table>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div class="footer">
-        <span class="footer-left">OFFICIAL &amp; CONFIDENTIAL · Generated {{ now()->format('d M Y H:i') }}</span>
-        <span class="footer-right">{{ $employee->employee_no }} · Ministry of Youth &amp; Sports HRMS</span>
-    </div>
+    {{-- Fixed Page Footer --}}
+    <table class="footer">
+        <tr>
+            <td class="footer-left" style="width: 34%;">OFFICIAL &amp; CONFIDENTIAL · FORM MYS-HR-01</td>
+            <td class="footer-center" style="width: 48%;">Ministry of Youth &amp; Sports HRMS · {{ $employee->employee_no ?: 'N/A' }} · Generated {{ now()->format('d M Y H:i') }}</td>
+            <td class="footer-right" style="width: 18%;"><span class="page-num"></span></td>
+        </tr>
+    </table>
 </body>
 </html>

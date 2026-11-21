@@ -24,7 +24,15 @@ class UserNotificationService
         ]);
 
         if ($user->email) {
-            Mail::to($user->email)->queue(new EmployeeUpdate($title, $message, $data['url'] ?? null));
+            try {
+                Mail::to($user->email)->queue(new EmployeeUpdate($title, $message, $data['url'] ?? null));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Notification email failed to send.', [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

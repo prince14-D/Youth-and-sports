@@ -50,9 +50,13 @@ class EmployeeSelfServiceController extends Controller
     {
         $employee = $request->user()->employee;
         abort_unless($employee, 403, 'Employee record not found for this account.');
-        $employee->load(['department', 'supervisor', 'education', 'certifications', 'nextOfKin', 'emergencyContacts', 'documents', 'user']);
-        $photoFile = $employee->photo_path ? public_path("storage/{$employee->photo_path}") : public_path('images/default-avatar.png');
-        $profilePhoto = is_file($photoFile) ? 'data:' . (mime_content_type($photoFile) ?: 'image/png') . ';base64,' . base64_encode(file_get_contents($photoFile)) : null;
-        return Pdf::loadView('employees.profile-pdf', compact('employee', 'profilePhoto'))->download("employee-profile-{$employee->employee_no}.pdf");
+        $employee->load(['department', 'supervisor', 'education', 'certifications', 'nextOfKin', 'emergencyContacts', 'user']);
+        $photoFile = $employee->photo_path ? public_path("storage/{$employee->photo_path}") : null;
+        $profilePhoto = ($photoFile && is_file($photoFile))
+            ? 'data:' . (mime_content_type($photoFile) ?: 'image/png') . ';base64,' . base64_encode(file_get_contents($photoFile))
+            : null;
+        return Pdf::loadView('employees.profile-pdf', compact('employee', 'profilePhoto'))
+            ->setPaper('a4')
+            ->download("employee-profile-{$employee->employee_no}.pdf");
     }
 }

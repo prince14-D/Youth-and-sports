@@ -8,12 +8,17 @@ use App\Models\Employee;
 use App\Models\Department;
 use App\Models\EmployeeEducation;
 use App\Models\EmployeeCertification;
+use App\Models\EmployeeNextOfKin;
+use App\Models\EmployeeEmergencyContact;
 use App\Models\EmployeeDocument;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\EmployeeService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use App\Mail\EmployeeWelcomeCredentials;
 
 class Create extends Component
@@ -91,6 +96,7 @@ class Create extends Component
     public $employment_type = 'Permanent';
     public $department_id = '';
     public $designation = '';
+    public $salary_grade = '';
     public $date_joined = '';
     public $supervisor_id = '';
     public $contract_duration = '12';
@@ -125,17 +131,33 @@ class Create extends Component
     public $salary_amount_lrd = 0.0;
     public $salary_amount_usd = 0.0;
 
-    // STEP 4: Academic Information (Allows Multiple)
+    // STEP 4: Academic Qualifications & Professional Certifications
     public $educations = [];
     public $new_institution = '';
     public $new_qualification = '';
-    public $new_graduation_year = '';
+    public $new_field_of_study = '';
+    public $new_year_obtained = '';
 
-    // STEP 5: Professional Certifications (Allows Multiple)
     public $certifications = [];
-    public $new_certification = '';
-    public $new_organization = '';
-    public $new_date_awarded = '';
+    public $new_certification_name = '';
+    public $new_issuing_body = '';
+    public $new_issue_date = '';
+    public $new_expiry_date = '';
+
+    // STEP 5: Next of Kin & Emergency Contacts
+    public $next_of_kin = [];
+    public $kin_name = '';
+    public $kin_relationship = '';
+    public $kin_phone = '';
+    public $kin_email = '';
+    public $kin_address = '';
+    public $kin_is_primary = true;
+
+    public $emergency_contacts = [];
+    public $ec_name = '';
+    public $ec_relationship = '';
+    public $ec_phone = '';
+    public $ec_email = '';
 
     // STEP 6: Document Uploads
     public $contract_file;
@@ -147,10 +169,18 @@ class Create extends Component
     {
         $this->educations = [];
         $this->certifications = [];
+        $this->next_of_kin = [];
+        $this->emergency_contacts = [];
     }
 
     public function nextStep()
     {
+        if ($this->step === 4) {
+            $this->flushPendingAcademicEntries();
+        } elseif ($this->step === 5) {
+            $this->flushPendingContactEntries();
+        }
+
         $this->validateStep();
         if ($this->step < $this->totalSteps) {
             $this->step++;
@@ -177,23 +207,27 @@ class Create extends Component
         return round($bytes / (1024 ** $unitIndex), 2) . ' ' . $units[$unitIndex];
     }
 
+    // ── Academic Qualifications ──────────────────────────────────────────
     public function addEducation()
     {
         $this->validate([
-            'new_institution'     => 'required|string',
-            'new_qualification'   => 'required|string',
-            'new_graduation_year' => 'required|numeric|digits:4',
+            'new_institution'    => 'required|string|max:255',
+            'new_qualification'  => 'required|string|max:255',
+            'new_field_of_study' => 'nullable|string|max:255',
+            'new_year_obtained'  => 'nullable|numeric|digits:4|min:1950|max:' . (now()->year + 1),
         ]);
 
         $this->educations[] = [
-            'institution'     => $this->new_institution,
-            'qualification'   => $this->new_qualification,
-            'graduation_year' => $this->new_graduation_year,
+            'institution'    => trim($this->new_institution),
+            'qualification'  => trim($this->new_qualification),
+            'field_of_study' => trim($this->new_field_of_study) ?: null,
+            'year_obtained'  => trim((string) $this->new_year_obtained) ?: null,
         ];
 
         $this->new_institution = '';
         $this->new_qualification = '';
-        $this->new_graduation_year = '';
+        $this->new_field_of_study = '';
+        $this->new_year_obtained = '';
     }
 
     public function removeEducation($index)
@@ -202,29 +236,124 @@ class Create extends Component
         $this->educations = array_values($this->educations);
     }
 
+    // ── Professional Certifications ──────────────────────────────────────
     public function addCertification()
     {
         $this->validate([
-            'new_certification' => 'required|string',
-            'new_organization'  => 'required|string',
-            'new_date_awarded'  => 'required|date',
+            'new_certification_name' => 'required|string|max:255',
+            'new_issuing_body'       => 'nullable|string|max:255',
+            'new_issue_date'         => 'nullable|date',
+            'new_expiry_date'        => 'nullable|date|after_or_equal:new_issue_date',
         ]);
 
         $this->certifications[] = [
-            'certification' => $this->new_certification,
-            'organization'  => $this->new_organization,
-            'date_awarded'  => $this->new_date_awarded,
+            'name'         => trim($this->new_certification_name),
+            'issuing_body' => trim($this->new_issuing_body) ?: null,
+            'issue_date'   => $this->new_issue_date ?: null,
+            'expiry_date'  => $this->new_expiry_date ?: null,
         ];
 
-        $this->new_certification = '';
-        $this->new_organization = '';
-        $this->new_date_awarded = '';
+        $this->new_certification_name = '';
+        $this->new_issuing_body = '';
+        $this->new_issue_date = '';
+        $this->new_expiry_date = '';
     }
 
     public function removeCertification($index)
     {
         unset($this->certifications[$index]);
         $this->certifications = array_values($this->certifications);
+    }
+
+    // ── Next of Kin ──────────────────────────────────────────────────────
+    public function addNextOfKin()
+    {
+        $this->validate([
+            'kin_name'         => 'required|string|max:150',
+            'kin_relationship' => 'required|string|max:100',
+            'kin_phone'        => 'nullable|string|max:20',
+            'kin_email'        => 'nullable|email|max:150',
+            'kin_address'      => 'nullable|string|max:500',
+            'kin_is_primary'   => 'boolean',
+        ]);
+
+        if ($this->kin_is_primary) {
+            foreach ($this->next_of_kin as &$existingKin) {
+                $existingKin['is_primary'] = false;
+            }
+            unset($existingKin);
+        }
+
+        $this->next_of_kin[] = [
+            'name'         => trim($this->kin_name),
+            'relationship' => trim($this->kin_relationship),
+            'phone'        => trim($this->kin_phone) ?: null,
+            'email'        => trim($this->kin_email) ?: null,
+            'address'      => trim($this->kin_address) ?: null,
+            'is_primary'   => (bool) $this->kin_is_primary,
+        ];
+
+        $this->kin_name = '';
+        $this->kin_relationship = '';
+        $this->kin_phone = '';
+        $this->kin_email = '';
+        $this->kin_address = '';
+        $this->kin_is_primary = false;
+    }
+
+    public function removeNextOfKin($index)
+    {
+        unset($this->next_of_kin[$index]);
+        $this->next_of_kin = array_values($this->next_of_kin);
+    }
+
+    // ── Emergency Contacts ───────────────────────────────────────────────
+    public function addEmergencyContact()
+    {
+        $this->validate([
+            'ec_name'         => 'required|string|max:150',
+            'ec_relationship' => 'required|string|max:100',
+            'ec_phone'        => 'required|string|max:20',
+            'ec_email'        => 'nullable|email|max:150',
+        ]);
+
+        $this->emergency_contacts[] = [
+            'name'         => trim($this->ec_name),
+            'relationship' => trim($this->ec_relationship),
+            'phone'        => trim($this->ec_phone),
+            'email'        => trim($this->ec_email) ?: null,
+        ];
+
+        $this->ec_name = '';
+        $this->ec_relationship = '';
+        $this->ec_phone = '';
+        $this->ec_email = '';
+    }
+
+    public function removeEmergencyContact($index)
+    {
+        unset($this->emergency_contacts[$index]);
+        $this->emergency_contacts = array_values($this->emergency_contacts);
+    }
+
+    private function flushPendingAcademicEntries(): void
+    {
+        if (trim($this->new_institution) !== '' || trim($this->new_qualification) !== '') {
+            $this->addEducation();
+        }
+        if (trim($this->new_certification_name) !== '') {
+            $this->addCertification();
+        }
+    }
+
+    private function flushPendingContactEntries(): void
+    {
+        if (trim($this->kin_name) !== '' || trim($this->kin_relationship) !== '') {
+            $this->addNextOfKin();
+        }
+        if (trim($this->ec_name) !== '' || trim($this->ec_relationship) !== '' || trim($this->ec_phone) !== '') {
+            $this->addEmergencyContact();
+        }
     }
 
     private function validateStep()
@@ -249,8 +378,9 @@ class Create extends Component
 
             if ($existing) {
                 $dob = $existing->date_of_birth ? $existing->date_of_birth->format('Y-m-d') : '';
-                $this->addError('first_name', "DUPLICATE ENROLLMENT REJECTED: '{$existing->full_name}' (DOB: {$dob}) is already enrolled as Employee #{$existing->employee_no}. Admin cannot register one person twice.");
-                return;
+                throw ValidationException::withMessages([
+                    'first_name' => "DUPLICATE ENROLLMENT REJECTED: '{$existing->full_name}' (DOB: {$dob}) is already enrolled as Employee #{$existing->employee_no}. Admin cannot register one person twice.",
+                ]);
             }
         } elseif ($this->step == 2) {
             $rules = [
@@ -266,11 +396,20 @@ class Create extends Component
                 $rules['employee_no'] = 'required|string|unique:employees,employee_no';
             }
             $this->validate($rules);
+        } elseif ($this->step == 6) {
+            $this->validate([
+                'contract_file'          => 'nullable|file|max:5120|mimes:pdf,doc,docx,jpg,jpeg,png',
+                'id_file'                => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png',
+                'academic_attachment'    => 'nullable|file|max:5120|mimes:pdf,doc,docx,jpg,jpeg,png',
+                'supporting_documents.*' => 'nullable|file|max:5120|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+            ]);
         }
     }
 
     public function save()
     {
+        $this->flushPendingAcademicEntries();
+        $this->flushPendingContactEntries();
         $this->validateStep();
 
         $temporaryPassword = 'MYSWelcome@2026!';
@@ -279,11 +418,9 @@ class Create extends Component
 
         DB::transaction(function () use ($temporaryPassword, &$welcomeUser, &$welcomeEmployee) {
             // 1. Resolve Employee Number
-            $employeeNo = $this->employee_no;
-            if (!$this->is_existing_employee) {
-                $year = now()->format('Y');
-                $count = Employee::whereYear('created_at', $year)->count() + 1;
-                $employeeNo = 'MYS-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            $employeeNo = trim((string) $this->employee_no);
+            if (!$this->is_existing_employee || $employeeNo === '') {
+                $employeeNo = app(EmployeeService::class)->generateEmployeeNumber();
             }
 
             // 2. Handle Photo Upload or Live Camera Snapshot
@@ -300,42 +437,44 @@ class Create extends Component
             // 3. Create Employee
             $employee = Employee::create([
                 'employee_no'        => $employeeNo,
-                'personnel_number'   => $this->personnel_number ?: null,
-                'first_name'         => $this->first_name,
-                'middle_name'        => $this->middle_name ?: null,
-                'last_name'          => $this->last_name,
+                'personnel_number'   => trim((string) $this->personnel_number) ?: null,
+                'first_name'         => trim($this->first_name),
+                'middle_name'        => trim((string) $this->middle_name) ?: null,
+                'last_name'          => trim($this->last_name),
                 'gender'             => $this->gender,
                 'date_of_birth'      => $this->date_of_birth ?: null,
-                'nationality'        => $this->nationality ?: null,
-                'county_of_birth'    => $this->county_of_birth ?: null,
+                'nationality'        => trim((string) $this->nationality) ?: null,
+                'county_of_birth'    => trim((string) $this->county_of_birth) ?: null,
                 'marital_status'     => $this->marital_status ?: null,
-                'phone'              => $this->phone ?: null,
-                'personal_email'     => $this->personal_email ?: null,
-                'official_email'     => $this->official_email,
-                'address'            => $this->address ?: null,
+                'phone'              => trim((string) $this->phone) ?: null,
+                'personal_email'     => trim((string) $this->personal_email) ?: null,
+                'official_email'     => trim($this->official_email),
+                'address'            => trim((string) $this->address) ?: null,
                 'photo_path'         => $photoPath,
                 'employment_status'  => $this->employment_status,
                 'employment_type'    => $this->employment_type,
                 'department_id'      => $this->department_id,
-                'designation'        => $this->designation,
+                'designation'        => trim($this->designation),
+                'salary_grade'       => trim((string) $this->salary_grade) ?: null,
                 'date_joined'        => $this->date_joined ?: null,
                 'contract_end_date'  => $this->employment_type === 'Contract' ? $this->contract_end_date : null,
                 'supervisor_id'      => $this->supervisor_id ?: null,
-                'bank_name'          => $this->bank_name ?: null,
-                'bank_account'       => $this->bank_account ?: null,
-                'tin_number'         => $this->tin_number ?: null,
-                'social_security_no' => $this->social_security_no ?: null,
-                'salary_amount_lrd'  => (is_numeric($this->salary_amount_lrd) && $this->salary_amount_lrd !== '') ? (float)$this->salary_amount_lrd : 0.00,
-                'salary_amount_usd'  => (is_numeric($this->salary_amount_usd) && $this->salary_amount_usd !== '') ? (float)$this->salary_amount_usd : 0.00,
+                'bank_name'          => trim((string) $this->bank_name) ?: null,
+                'bank_account'       => trim((string) $this->bank_account) ?: null,
+                'tin_number'         => trim((string) $this->tin_number) ?: null,
+                'social_security_no' => trim((string) $this->social_security_no) ?: null,
+                'salary_amount_lrd'  => (is_numeric($this->salary_amount_lrd) && $this->salary_amount_lrd !== '') ? (float) $this->salary_amount_lrd : 0.00,
+                'salary_amount_usd'  => (is_numeric($this->salary_amount_usd) && $this->salary_amount_usd !== '') ? (float) $this->salary_amount_usd : 0.00,
+                'created_by'         => auth()->id(),
             ]);
 
             // 4. Create User linked account
             $user = User::create([
-                'name'        => $employee->full_name,
-                'email'       => $employee->official_email,
-                'password'    => Hash::make($temporaryPassword),
-                'employee_id' => $employee->id,
-                'is_active'   => true,
+                'name'                  => $employee->full_name,
+                'email'                 => $employee->official_email,
+                'password'              => Hash::make($temporaryPassword),
+                'employee_id'           => $employee->id,
+                'is_active'             => true,
                 'force_password_change' => true,
             ]);
             $user->assignRole('Employee');
@@ -345,24 +484,50 @@ class Create extends Component
             // 5. Save Academic Records
             foreach ($this->educations as $edu) {
                 EmployeeEducation::create([
-                    'employee_id'     => $employee->id,
-                    'institution'     => $edu['institution'],
-                    'qualification'   => $edu['qualification'],
-                    'graduation_year' => $edu['graduation_year'],
+                    'employee_id'    => $employee->id,
+                    'institution'    => $edu['institution'],
+                    'qualification'  => $edu['qualification'],
+                    'field_of_study' => $edu['field_of_study'] ?? null,
+                    'year_obtained'  => $edu['year_obtained'] ?? null,
                 ]);
             }
 
             // 6. Save Certifications
             foreach ($this->certifications as $cert) {
                 EmployeeCertification::create([
-                    'employee_id'   => $employee->id,
-                    'certification' => $cert['certification'],
-                    'organization'  => $cert['organization'],
-                    'date_awarded'  => $cert['date_awarded'],
+                    'employee_id'  => $employee->id,
+                    'name'         => $cert['name'],
+                    'issuing_body' => $cert['issuing_body'] ?? null,
+                    'issue_date'   => $cert['issue_date'] ?? null,
+                    'expiry_date'  => $cert['expiry_date'] ?? null,
                 ]);
             }
 
-            // 7. Save Contract/ID Document Uploads
+            // 7. Save Next of Kin
+            foreach ($this->next_of_kin as $kin) {
+                EmployeeNextOfKin::create([
+                    'employee_id'  => $employee->id,
+                    'name'         => $kin['name'],
+                    'relationship' => $kin['relationship'],
+                    'phone'        => $kin['phone'] ?? null,
+                    'email'        => $kin['email'] ?? null,
+                    'address'      => $kin['address'] ?? null,
+                    'is_primary'   => (bool) ($kin['is_primary'] ?? false),
+                ]);
+            }
+
+            // 8. Save Emergency Contacts
+            foreach ($this->emergency_contacts as $contact) {
+                EmployeeEmergencyContact::create([
+                    'employee_id'  => $employee->id,
+                    'name'         => $contact['name'],
+                    'relationship' => $contact['relationship'],
+                    'phone'        => $contact['phone'],
+                    'email'        => $contact['email'] ?? null,
+                ]);
+            }
+
+            // 9. Save Contract/ID Document Uploads
             if ($this->contract_file) {
                 $cPath = $this->contract_file->store('employees/documents', 'public');
                 EmployeeDocument::create([
@@ -370,6 +535,9 @@ class Create extends Component
                     'document_type' => 'contract',
                     'title'         => 'Employment Contract',
                     'file_path'     => $cPath,
+                    'file_size'     => $this->formatBytes($this->contract_file->getSize()),
+                    'mime_type'     => $this->contract_file->getMimeType(),
+                    'uploaded_by'   => auth()->id(),
                 ]);
             }
             if ($this->id_file) {
@@ -379,6 +547,9 @@ class Create extends Component
                     'document_type' => 'id_card',
                     'title'         => 'National ID Card',
                     'file_path'     => $idPath,
+                    'file_size'     => $this->formatBytes($this->id_file->getSize()),
+                    'mime_type'     => $this->id_file->getMimeType(),
+                    'uploaded_by'   => auth()->id(),
                 ]);
             }
             if ($this->academic_attachment) {
@@ -390,6 +561,7 @@ class Create extends Component
                     'file_path'     => $path,
                     'file_size'     => $this->formatBytes($this->academic_attachment->getSize()),
                     'mime_type'     => $this->academic_attachment->getMimeType(),
+                    'uploaded_by'   => auth()->id(),
                 ]);
             }
             foreach ($this->supporting_documents as $document) {
@@ -404,28 +576,51 @@ class Create extends Component
                     'file_path'     => $path,
                     'file_size'     => $this->formatBytes($document->getSize()),
                     'mime_type'     => $document->getMimeType(),
+                    'uploaded_by'   => auth()->id(),
                 ]);
             }
 
-            AuditService::log('created', Employee::class, $employee->id,
-                [], $employee->toArray(),
-                "Registered employee record {$employee->full_name} and auto-generated code {$employee->employee_no}"
+            AuditService::log(
+                'created',
+                Employee::class,
+                $employee->id,
+                [],
+                $employee->toArray(),
+                "Registered employee record {$employee->full_name} ({$employee->employee_no})"
             );
         });
 
+        $emailFailed = false;
         if ($welcomeUser?->email && $welcomeEmployee) {
-            Mail::to($welcomeUser->email)->queue(new EmployeeWelcomeCredentials(
-                $welcomeEmployee->full_name,
-                $welcomeEmployee->employee_no,
-                $welcomeEmployee->employment_type === 'Contract' ? 'Contractor' : $welcomeEmployee->employment_type,
-                $welcomeUser->email,
-                $temporaryPassword,
-                route('login'),
-            ));
+            try {
+                Mail::to($welcomeUser->email)->queue(new EmployeeWelcomeCredentials(
+                    $welcomeEmployee->full_name,
+                    $welcomeEmployee->employee_no,
+                    $welcomeEmployee->employment_type === 'Contract' ? 'Contractor' : $welcomeEmployee->employment_type,
+                    $welcomeUser->email,
+                    $temporaryPassword,
+                    route('login'),
+                ));
+            } catch (\Throwable $e) {
+                $emailFailed = true;
+                Log::warning('Welcome credentials email failed during employee registration.', [
+                    'employee_id' => $welcomeEmployee->id,
+                    'email'       => $welcomeUser->email,
+                    'error'       => $e->getMessage(),
+                ]);
+            }
         }
 
-        session()->flash('success', 'Employee registered successfully!');
-        return redirect()->route('employees.index');
+        if ($emailFailed) {
+            session()->flash(
+                'warning',
+                "Employee {$welcomeEmployee->full_name} ({$welcomeEmployee->employee_no}) was registered successfully, but the welcome email could not be sent. Please check the Ministry mail configuration."
+            );
+        } else {
+            session()->flash('success', "Employee {$welcomeEmployee->full_name} ({$welcomeEmployee->employee_no}) registered successfully!");
+        }
+
+        return redirect()->route('employees.show', $welcomeEmployee);
     }
 
     public function render()

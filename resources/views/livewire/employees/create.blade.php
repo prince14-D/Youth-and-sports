@@ -21,9 +21,11 @@
                 <div>
                     <h5 class="fw-bold text-navy mb-0">Step {{ $step }} of {{ $totalSteps }}: 
                         @if($step == 1) Personal Information
-                        @elseif($step == 2) Employment & Official Identifiers
-                        @elseif($step == 3) Financials & Compensation
-                        @else Academic History & Attachments
+                        @elseif($step == 2) Employment &amp; Official Identifiers
+                        @elseif($step == 3) Financials &amp; Compensation
+                        @elseif($step == 4) Academic Qualifications &amp; Certifications
+                        @elseif($step == 5) Next of Kin &amp; Emergency Contacts
+                        @else Document Attachments &amp; Final Review
                         @endif
                     </h5>
                     <small class="text-muted" style="font-size:11.5px;">Complete all required fields marked with an asterisk (*)</small>
@@ -79,7 +81,7 @@
                                 </div>
                                 <div class="col-12 col-md">
                                     <h6 class="fw-bold text-navy mb-1"><i class="bi bi-camera-fill me-1.5 text-primary"></i>Official Verification Photo (For Attendance Tracking &amp; ID Badges)</h6>
-                                    <p class="text-muted small mb-3" style="font-size: 12px;">Take a live photo using your webcam/camera or upload a image file for biometric attendance verification and official personnel ID cards.</p>
+                                    <p class="text-muted small mb-3" style="font-size: 12px;">Take a live photo using your webcam/camera or upload an image file for biometric attendance verification and official personnel ID cards.</p>
                                     
                                     <div class="d-flex flex-wrap gap-2 align-items-center">
                                         <!-- Live Camera Snapshot Button -->
@@ -96,7 +98,7 @@
                                         </label>
 
                                         @if($photo || $photo_base64)
-                                        <button type="button" wire:click="$set('photo_base64', '')" class="btn btn-outline-danger btn-sm rounded-pill px-2.5 py-1" title="Clear Photo">
+                                        <button type="button" wire:click="$set('photo_base64', ''); $set('photo', null)" class="btn btn-outline-danger btn-sm rounded-pill px-2.5 py-1" title="Clear Photo">
                                             <i class="bi bi-x-circle me-1"></i>Clear Photo
                                         </button>
                                         @endif
@@ -171,6 +173,7 @@
                             if (modal) modal.hide();
                         }
                     </script>
+
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <label class="form-label fw-bold small">First Name <span class="text-danger">*</span></label>
@@ -202,32 +205,42 @@
                             @error('date_of_birth') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12 col-sm-6 col-md-3">
+                            <label class="form-label fw-bold small">Marital Status</label>
+                            <select wire:model.blur="marital_status" class="form-select">
+                                <option value="">Select Status</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Divorced">Divorced</option>
+                                <option value="Widowed">Widowed</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-3">
                             <label class="form-label fw-bold small">Nationality</label>
                             <input type="text" wire:model.blur="nationality" class="form-control" placeholder="e.g. Liberian">
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label fw-bold small">County of Birth</label>
                             <input type="text" wire:model.blur="county_of_birth" class="form-control" placeholder="e.g. Montserrado">
                         </div>
-
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label fw-bold small">Official Email <span class="text-danger">*</span></label>
                             <input type="email" wire:model.blur="official_email" class="form-control @error('official_email') is-invalid @enderror" placeholder="aaron.jones@mys.gov.lr">
                             @error('official_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label fw-bold small">Personal Email</label>
                             <input type="email" wire:model.blur="personal_email" class="form-control" placeholder="aaron@gmail.com">
                         </div>
+
                         <div class="col-12 col-md-4">
                             <label class="form-label fw-bold small">Phone Number <span class="text-danger">*</span></label>
                             <input type="text" wire:model.blur="phone" class="form-control @error('phone') is-invalid @enderror" placeholder="+231 88 123 4567">
                             @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-
-                        <div class="col-12">
+                        <div class="col-12 col-md-8">
                             <label class="form-label fw-bold small">Residential Address</label>
-                            <textarea wire:model.blur="address" rows="2" class="form-control" placeholder="Enter physical home address..."></textarea>
+                            <input type="text" wire:model.blur="address" class="form-control" placeholder="Enter physical home address...">
                         </div>
                     </div>
                 </div>
@@ -236,7 +249,7 @@
                 <!-- STEP 2: Employment Information -->
                 @if($step == 2)
                 <div>
-                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Step 2: Employment & Official Identifiers</h5>
+                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Step 2: Employment &amp; Official Identifiers</h5>
                     
                     <div class="p-3 mb-4 rounded-3" style="background-color: #fee2e2; border: 1px solid #fca5a5;">
                         <div class="d-flex align-items-center gap-2">
@@ -248,7 +261,7 @@
                     </div>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label class="form-label fw-bold small">Registration Status Type</label>
                             <select wire:model.live="is_existing_employee" class="form-select">
                                 <option value="1">Existing Employee (Enter Official ID)</option>
@@ -256,14 +269,14 @@
                             </select>
                         </div>
                         @if($is_existing_employee)
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label class="form-label fw-bold small" style="color: #dc2626 !important;">Official Employee ID <span class="text-danger">*</span></label>
                             <input type="text" wire:model.blur="employee_no" class="form-control fw-bold font-monospace @error('employee_no') is-invalid @enderror" placeholder="e.g. MYS-2022-0412" style="color: #dc2626 !important;">
                             @error('employee_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         @endif
-                        <div class="col-12 col-md-6">
-                            <label class="form-label fw-bold small">Personnel Number (Optional Internal Reference)</label>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-bold small">Personnel / CSA Number</label>
                             <input type="text" wire:model.blur="personnel_number" class="form-control font-monospace" placeholder="e.g. PER-8721">
                         </div>
                     </div>
@@ -286,16 +299,16 @@
                             @error('designation') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-12 col-sm-6 col-md-4">
+                        <div class="col-12 col-sm-6 col-md-3">
                             <label class="form-label fw-bold small">Employment Type</label>
-                            <select wire:model.blur="employment_type" class="form-select">
+                            <select wire:model.live="employment_type" class="form-select">
                                 <option value="Permanent">Permanent</option>
                                 <option value="Contract">Contract</option>
                                 <option value="Probationary">Probationary</option>
                                 <option value="Temporary">Temporary</option>
                             </select>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-4">
+                        <div class="col-12 col-sm-6 col-md-3">
                             <label class="form-label fw-bold small">Employment Status</label>
                             <select wire:model.blur="employment_status" class="form-select">
                                 <option value="Active">Active</option>
@@ -304,9 +317,13 @@
                                 <option value="Probationary">Probationary</option>
                             </select>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-4">
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <label class="form-label fw-bold small">Salary Grade</label>
+                            <input type="text" wire:model.blur="salary_grade" class="form-control" placeholder="e.g. Grade 9">
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-3">
                             <label class="form-label fw-bold small">Date Joined <span class="text-danger">*</span></label>
-                            <input type="date" wire:model.blur="date_joined" class="form-control @error('date_joined') is-invalid @enderror">
+                            <input type="date" wire:model.live="date_joined" class="form-control @error('date_joined') is-invalid @enderror">
                             @error('date_joined') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
@@ -355,7 +372,7 @@
                 <!-- STEP 3: Financials -->
                 @if($step == 3)
                 <div>
-                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-cash-coin me-2 text-primary"></i>Step 3: Financials & Payroll Account</h5>
+                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-cash-coin me-2 text-primary"></i>Step 3: Financials &amp; Payroll Account</h5>
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label fw-bold small">Basic Salary (LRD)</label>
@@ -393,52 +410,361 @@
                 </div>
                 @endif
 
-                <!-- STEP 4: Academic History & Attachments -->
+                <!-- STEP 4: Academic Qualifications & Professional Certifications -->
                 @if($step == 4)
                 <div>
-                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-mortarboard-fill me-2 text-primary"></i>Step 4: Academic History & Document Attachments</h5>
-                    
-                    <!-- Profile Photo Upload -->
-                    <div class="mb-4 p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-bold small">Employee Profile Photo</label>
-                        <input type="file" wire:model="photo" class="form-control">
-                        @if ($photo)
-                        <div class="mt-2 text-center">
-                            <img src="{{ $photo->temporaryUrl() }}" class="rounded-circle border" style="width: 80px; height: 80px; object-fit: cover;">
+                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-mortarboard-fill me-2 text-primary"></i>Step 4: Academic Qualifications &amp; Professional Certifications</h5>
+
+                    <!-- Academic Qualifications Card -->
+                    <div class="p-3.5 bg-light rounded-3 border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-navy mb-0"><i class="bi bi-book-half me-2 text-primary"></i>Academic Qualifications (Optional)</h6>
+                            <span class="badge bg-white text-navy border">{{ count($educations) }} Added</span>
+                        </div>
+                        <div class="row g-2.5 align-items-end">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Institution</label>
+                                <input type="text" wire:model="new_institution" class="form-control @error('new_institution') is-invalid @enderror" placeholder="e.g. University of Liberia">
+                                @error('new_institution') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label fw-bold small">Qualification / Degree</label>
+                                <input type="text" wire:model="new_qualification" class="form-control @error('new_qualification') is-invalid @enderror" placeholder="e.g. B.Sc., MPA, Diploma">
+                                @error('new_qualification') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label fw-bold small">Field of Study</label>
+                                <input type="text" wire:model="new_field_of_study" class="form-control" placeholder="e.g. Public Administration">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label fw-bold small">Year Obtained</label>
+                                <input type="number" wire:model="new_year_obtained" class="form-control @error('new_year_obtained') is-invalid @enderror" placeholder="e.g. 2020">
+                                @error('new_year_obtained') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 text-end mt-2">
+                                <button type="button" wire:click="addEducation" class="btn btn-navy btn-sm px-3">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Qualification
+                                </button>
+                            </div>
+                        </div>
+
+                        @if(count($educations))
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-bordered bg-white mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Institution</th>
+                                        <th>Qualification</th>
+                                        <th>Field of Study</th>
+                                        <th>Year</th>
+                                        <th class="text-end" style="width: 70px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($educations as $idx => $edu)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $edu['institution'] }}</td>
+                                        <td>{{ $edu['qualification'] }}</td>
+                                        <td>{{ $edu['field_of_study'] ?: '—' }}</td>
+                                        <td>{{ $edu['year_obtained'] ?: '—' }}</td>
+                                        <td class="text-end">
+                                            <button type="button" wire:click="removeEducation({{ $idx }})" class="btn btn-outline-danger btn-sm py-0 px-2">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                         @endif
                     </div>
 
-                    <!-- Contract Document Upload -->
-                    <div class="mb-4 p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-bold small">Employment Contract Attachment (PDF / Image)</label>
-                        <input type="file" wire:model="contract_file" class="form-control">
-                    </div>
-
-                    <div class="mb-4 p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-bold small">National ID / Biometric Document</label>
-                        <input type="file" wire:model="id_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                    </div>
-
-                    <div class="mb-4 p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-bold small">Academic Certificate / Transcript</label>
-                        <input type="file" wire:model="academic_attachment" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                        @if($academic_attachment)
-                            <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ $academic_attachment->getClientOriginalName() }}</small>
-                        @endif
-                    </div>
-
-                    <div class="p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-bold small">Other Supporting Documents</label>
-                        <input type="file" wire:model="supporting_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
-                        <small class="text-muted d-block mt-2">You can attach certificates, ID documents, CV, appointment letters, or other HR documents.</small>
-                        @if(count($supporting_documents))
-                            <div class="mt-2">
-                                @foreach($supporting_documents as $document)
-                                    <span class="badge bg-white text-navy border me-1 mb-1">{{ $document->getClientOriginalName() }}</span>
-                                @endforeach
+                    <!-- Professional Certifications Card -->
+                    <div class="p-3.5 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-navy mb-0"><i class="bi bi-award-fill me-2 text-primary"></i>Professional Certifications &amp; Licenses (Optional)</h6>
+                            <span class="badge bg-white text-navy border">{{ count($certifications) }} Added</span>
+                        </div>
+                        <div class="row g-2.5 align-items-end">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Certification Name</label>
+                                <input type="text" wire:model="new_certification_name" class="form-control @error('new_certification_name') is-invalid @enderror" placeholder="e.g. Certified HR Professional">
+                                @error('new_certification_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Issuing Body / Organization</label>
+                                <input type="text" wire:model="new_issuing_body" class="form-control" placeholder="e.g. LIPA / SHRM">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label fw-bold small">Issue Date</label>
+                                <input type="date" wire:model="new_issue_date" class="form-control @error('new_issue_date') is-invalid @enderror">
+                                @error('new_issue_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label fw-bold small">Expiry Date</label>
+                                <input type="date" wire:model="new_expiry_date" class="form-control @error('new_expiry_date') is-invalid @enderror">
+                                @error('new_expiry_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 text-end mt-2">
+                                <button type="button" wire:click="addCertification" class="btn btn-navy btn-sm px-3">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Certification
+                                </button>
+                            </div>
+                        </div>
+
+                        @if(count($certifications))
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-bordered bg-white mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Certification</th>
+                                        <th>Issuing Body</th>
+                                        <th>Issue Date</th>
+                                        <th>Expiry Date</th>
+                                        <th class="text-end" style="width: 70px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($certifications as $idx => $cert)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $cert['name'] }}</td>
+                                        <td>{{ $cert['issuing_body'] ?: '—' }}</td>
+                                        <td>{{ $cert['issue_date'] ?: '—' }}</td>
+                                        <td>{{ $cert['expiry_date'] ?: '—' }}</td>
+                                        <td class="text-end">
+                                            <button type="button" wire:click="removeCertification({{ $idx }})" class="btn btn-outline-danger btn-sm py-0 px-2">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                         @endif
+                    </div>
+                </div>
+                @endif
+
+                <!-- STEP 5: Next of Kin & Emergency Contacts -->
+                @if($step == 5)
+                <div>
+                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-people-fill me-2 text-primary"></i>Step 5: Next of Kin &amp; Emergency Contacts</h5>
+
+                    <!-- Next of Kin Section -->
+                    <div class="p-3.5 bg-light rounded-3 border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-navy mb-0"><i class="bi bi-person-heart me-2 text-danger"></i>Next of Kin Details</h6>
+                            <span class="badge bg-white text-navy border">{{ count($next_of_kin) }} Added</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Full Name</label>
+                                <input type="text" wire:model="kin_name" class="form-control @error('kin_name') is-invalid @enderror" placeholder="e.g. Mary Jones">
+                                @error('kin_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Relationship</label>
+                                <input type="text" wire:model="kin_relationship" class="form-control @error('kin_relationship') is-invalid @enderror" placeholder="e.g. Spouse, Mother, Sibling">
+                                @error('kin_relationship') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Phone Number</label>
+                                <input type="text" wire:model="kin_phone" class="form-control @error('kin_phone') is-invalid @enderror" placeholder="e.g. +231 77 123 4567">
+                                @error('kin_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-bold small">Email Address</label>
+                                <input type="email" wire:model="kin_email" class="form-control @error('kin_email') is-invalid @enderror" placeholder="e.g. mary@example.com">
+                                @error('kin_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-5">
+                                <label class="form-label fw-bold small">Residential Address</label>
+                                <input type="text" wire:model="kin_address" class="form-control" placeholder="e.g. Sinkor, Monrovia">
+                            </div>
+                            <div class="col-12 col-md-3 d-flex align-items-end justify-content-between gap-2">
+                                <div class="form-check mb-2">
+                                    <input type="checkbox" wire:model="kin_is_primary" class="form-check-input" id="kinIsPrimary">
+                                    <label class="form-check-label small fw-semibold" for="kinIsPrimary">Primary</label>
+                                </div>
+                                <button type="button" wire:click="addNextOfKin" class="btn btn-navy btn-sm px-3">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Next of Kin
+                                </button>
+                            </div>
+                        </div>
+
+                        @if(count($next_of_kin))
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-bordered bg-white mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Full Name</th>
+                                        <th>Relationship</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Address</th>
+                                        <th class="text-end" style="width: 70px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($next_of_kin as $idx => $kin)
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            {{ $kin['name'] }}
+                                            @if(!empty($kin['is_primary']))
+                                                <span class="badge bg-navy ms-1">Primary</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $kin['relationship'] }}</td>
+                                        <td>{{ $kin['phone'] ?: '—' }}</td>
+                                        <td>{{ $kin['email'] ?: '—' }}</td>
+                                        <td>{{ $kin['address'] ?: '—' }}</td>
+                                        <td class="text-end">
+                                            <button type="button" wire:click="removeNextOfKin({{ $idx }})" class="btn btn-outline-danger btn-sm py-0 px-2">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Emergency Contacts Section -->
+                    <div class="p-3.5 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-navy mb-0"><i class="bi bi-telephone-plus-fill me-2 text-warning"></i>Emergency Contacts (Optional)</h6>
+                            <span class="badge bg-white text-navy border">{{ count($emergency_contacts) }} Added</span>
+                        </div>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12 col-md-3">
+                                <label class="form-label fw-bold small">Contact Name</label>
+                                <input type="text" wire:model="ec_name" class="form-control @error('ec_name') is-invalid @enderror" placeholder="e.g. Samuel Doe">
+                                @error('ec_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label fw-bold small">Relationship</label>
+                                <input type="text" wire:model="ec_relationship" class="form-control @error('ec_relationship') is-invalid @enderror" placeholder="e.g. Brother, Friend">
+                                @error('ec_relationship') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label fw-bold small">Phone Number</label>
+                                <input type="text" wire:model="ec_phone" class="form-control @error('ec_phone') is-invalid @enderror" placeholder="e.g. +231 88 999 0000">
+                                @error('ec_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label fw-bold small">Email Address</label>
+                                <input type="email" wire:model="ec_email" class="form-control @error('ec_email') is-invalid @enderror" placeholder="Optional email">
+                                @error('ec_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="button" wire:click="addEmergencyContact" class="btn btn-navy btn-sm px-3">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Emergency Contact
+                                </button>
+                            </div>
+                        </div>
+
+                        @if(count($emergency_contacts))
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-bordered bg-white mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Contact Name</th>
+                                        <th>Relationship</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th class="text-end" style="width: 70px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($emergency_contacts as $idx => $ec)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $ec['name'] }}</td>
+                                        <td>{{ $ec['relationship'] }}</td>
+                                        <td>{{ $ec['phone'] }}</td>
+                                        <td>{{ $ec['email'] ?: '—' }}</td>
+                                        <td class="text-end">
+                                            <button type="button" wire:click="removeEmergencyContact({{ $idx }})" class="btn btn-outline-danger btn-sm py-0 px-2">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                <!-- STEP 6: Document Attachments & Final Review -->
+                @if($step == 6)
+                <div>
+                    <h5 class="fw-bold text-navy border-bottom pb-3 mb-4"><i class="bi bi-file-earmark-arrow-up-fill me-2 text-primary"></i>Step 6: Supporting Document Attachments &amp; Final Submission</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <label class="form-label fw-bold small">Employment Contract Attachment (PDF / Image)</label>
+                                <input type="file" wire:model="contract_file" class="form-control @error('contract_file') is-invalid @enderror" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                @error('contract_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @if($contract_file)
+                                    <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ $contract_file->getClientOriginalName() }}</small>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <label class="form-label fw-bold small">National ID / Biometric Document</label>
+                                <input type="file" wire:model="id_file" class="form-control @error('id_file') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png">
+                                @error('id_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @if($id_file)
+                                    <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ $id_file->getClientOriginalName() }}</small>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <label class="form-label fw-bold small">Academic Certificate / Transcript</label>
+                                <input type="file" wire:model="academic_attachment" class="form-control @error('academic_attachment') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                @error('academic_attachment') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @if($academic_attachment)
+                                    <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ $academic_attachment->getClientOriginalName() }}</small>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <label class="form-label fw-bold small">Other Supporting Documents</label>
+                                <input type="file" wire:model="supporting_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
+                                <small class="text-muted d-block mt-2">Attach CV, appointment letters, or other HR files (optional).</small>
+                                @if(count($supporting_documents))
+                                    <div class="mt-2">
+                                        @foreach($supporting_documents as $document)
+                                            <span class="badge bg-white text-navy border me-1 mb-1">{{ $document->getClientOriginalName() }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registration Summary Preview -->
+                    <div class="p-3 rounded-3 border" style="background: #f8fafc;">
+                        <div class="fw-bold text-navy small text-uppercase mb-2"><i class="bi bi-clipboard-check me-1 text-primary"></i>Registration Summary</div>
+                        <div class="row g-2 small">
+                            <div class="col-6 col-md-3"><span class="text-muted">Employee:</span> <strong class="text-navy">{{ trim($first_name . ' ' . $middle_name . ' ' . $last_name) ?: '—' }}</strong></div>
+                            <div class="col-6 col-md-3"><span class="text-muted">Official Email:</span> <strong>{{ $official_email ?: '—' }}</strong></div>
+                            <div class="col-6 col-md-3"><span class="text-muted">Designation:</span> <strong>{{ $designation ?: '—' }}</strong></div>
+                            <div class="col-6 col-md-3"><span class="text-muted">Records Added:</span> <strong>{{ count($educations) }} Edu · {{ count($next_of_kin) }} Kin · {{ count($emergency_contacts) }} EC</strong></div>
+                        </div>
                     </div>
                 </div>
                 @endif
@@ -446,7 +772,7 @@
                 <!-- Navigation Action Buttons -->
                 <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
                     @if($step > 1)
-                    <button type="button" wire:click="prevStep" class="btn btn-outline-secondary">
+                    <button type="button" wire:click="prevStep" class="btn btn-outline-secondary" wire:loading.attr="disabled">
                         <i class="bi bi-arrow-left me-1"></i>Previous Step
                     </button>
                     @else
@@ -454,12 +780,17 @@
                     @endif
 
                     @if($step < $totalSteps)
-                    <button type="button" wire:click="nextStep" class="btn btn-navy">
+                    <button type="button" wire:click="nextStep" class="btn btn-navy" wire:loading.attr="disabled">
                         Next Step <i class="bi bi-arrow-right ms-1"></i>
                     </button>
                     @else
-                    <button type="submit" class="btn btn-accent px-4">
-                        <i class="bi bi-check-circle-fill me-1"></i>Complete Employee Registration
+                    <button type="submit" class="btn btn-accent px-4" wire:loading.attr="disabled" wire:target="save">
+                        <span wire:loading.remove wire:target="save">
+                            <i class="bi bi-check-circle-fill me-1"></i>Complete Employee Registration
+                        </span>
+                        <span wire:loading wire:target="save">
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Registering Employee...
+                        </span>
                     </button>
                     @endif
                 </div>

@@ -70,13 +70,13 @@ class EmployeeController extends Controller
         $employee->load([
             'department', 'supervisor:id,first_name,last_name,designation',
             'education', 'certifications', 'nextOfKin',
-            'emergencyContacts', 'documents', 'user',
+            'emergencyContacts', 'user',
         ]);
 
         $photoFile = $employee->photo_path
             ? public_path("storage/{$employee->photo_path}")
-            : public_path('images/default-avatar.png');
-        $profilePhoto = is_file($photoFile)
+            : null;
+        $profilePhoto = ($photoFile && is_file($photoFile))
             ? 'data:' . (mime_content_type($photoFile) ?: 'image/png') . ';base64,' . base64_encode(file_get_contents($photoFile))
             : null;
 
