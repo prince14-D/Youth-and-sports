@@ -14,24 +14,53 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
     public const ROLE_DESCRIPTIONS = [
-        'System Administrator'               => 'Full unrestricted system control, settings, audit logs, and admin/user creation.',
-        'Minister'                           => 'Office of the Minister: executive oversight of all departments, daily activity & ministry-wide documents.',
-        'Deputy Minister for Administration' => 'DMA (Head of Administration): approves HR, Finance, Asset & Procurement requests and routes executive memos.',
-        'Human Resource Director'            => 'Executive HR leadership: approves leave, excuses, payroll, appraisals, movements & renewals.',
-        'Assistant HR Director'    => 'Deputy HR leadership: supports Director across HR operations, approvals, reports & staffing.',
-        'HR Officer'               => 'Day-to-day HR operations: employee records, recruitment, leave/excuses, communications & assets.',
-        'HR Data Analyst'                    => 'Dedicated data-entry workspace: register employees, register contractor contracts & bulk imports.',
-        'Asset Manager'                      => 'Asset Management Division: dedicated dashboard to manage government property, vehicles, equipment, inventory & maintenance.',
-        'Payroll Officer'          => 'Generates and manages payroll cycles, salary grades, and payslips.',
-        'Finance Officer'          => 'Finance Division: dedicated dashboard for budgets, payment vouchers, accounting ledger & payroll disbursements.',
-        'Director/Manager'         => 'Departmental oversight, leave/excuse approvals, and staff performance appraisals.',
-        'Department Head'          => 'Manages department staff, leave/excuse approvals, appraisals, and training.',
-        'Supervisor'               => 'Unit supervision, leave/excuse review, and performance appraisals.',
-        'Auditor'                  => 'Internal Audit Division: dedicated dashboard to review financial records, verify vouchers, assess internal controls & flag irregularities.',
-        'Procurement Officer'      => 'Procurement Unit: dedicated dashboard for tenders, bidding, bid evaluation, supplier registry & procurement compliance.',
-        'Stadium Manager'          => 'Stadium Management: dedicated dashboard for stadium facilities, event preparation checklists, maintenance work orders & safety inspections.',
-        'Employee'                 => 'Permanent/staff self-service portal: leave, excuses, payslips, profile, and internal vacancies.',
-        'Contractor'               => 'Contractor self-service portal: contract timeline, renewals, payment slips, and excuses.',
+        'System Administrator'               => 'Full system administration: user/role provisioning, system settings, SMTP, audit trail & security.',
+        'Minister'                           => 'Office of the Minister: executive oversight of all departments, live document approvals/feedback & daily operations.',
+        'Deputy Minister for Administration' => 'DMA (Head of Administration): approves HR, Finance, Asset & Procurement requests and executive memos.',
+        'Human Resource Director'            => 'Executive HR leadership: final Stage-3 approvals for leave, payroll, movements, renewals & HR governance.',
+        'Assistant HR Director'              => 'Deputy HR leadership: Stage-2 approvals, HR operations oversight, recruitment & staffing reports.',
+        'HR Officer'                         => 'Day-to-day HR operations: employee records, Stage-1 verifications, recruitment, leave/excuses & communications.',
+        'HR Data Analyst'                    => 'Dedicated data-entry workspace: register employees, contractor agreements & bulk CSV roster imports.',
+        'Asset Manager'                      => 'Asset Management Division: government property, vehicles, equipment, inventory, maintenance & GSA exports.',
+        'Payroll Officer'                    => 'Generates and manages dual-currency (LRD/USD) payroll runs, allowances/deductions & payslips.',
+        'Finance Officer'                    => 'Finance Division: budgets, payment vouchers, accounting ledger, payroll disbursements & financial reports.',
+        'Director/Manager'                   => 'Departmental oversight, leave/excuse approvals, document workflow & staff performance appraisals.',
+        'Department Head'                    => 'Manages department staff, leave/excuse approvals, document workflow, appraisals & training.',
+        'Supervisor'                         => 'Unit supervision, leave/excuse review & performance appraisals.',
+        'Auditor'                            => 'Internal Audit Division: verifies vouchers, scans irregularities, assesses internal controls & escalates findings.',
+        'Procurement Officer'                => 'Procurement Unit: tenders, bidding, bid evaluation (70/30), supplier registry & compliance monitoring.',
+        'Stadium Manager'                    => 'Stadium Management: facilities, event readiness checklists, maintenance work orders & safety inspections.',
+        'Employee'                           => 'Permanent staff self-service portal: leave requests, excuses, payslips, ID card, profile & vacancies.',
+        'Contractor'                         => 'Contractor self-service portal: contract timeline, renewal requests, payment slips, ID card & excuses.',
+    ];
+
+    public const ROLE_DASHBOARDS = [
+        'System Administrator'               => 'Super Admin Dashboard',
+        'Minister'                           => "Minister's Office Dashboard",
+        'Deputy Minister for Administration' => 'DMA Command Center',
+        'Human Resource Director'            => 'HR Executive Dashboard',
+        'Assistant HR Director'              => 'HR Executive Dashboard',
+        'HR Officer'                         => 'HR Operations Dashboard',
+        'HR Data Analyst'                    => 'HR Data Analyst Desk',
+        'Asset Manager'                      => 'Asset Management Dashboard',
+        'Finance Officer'                    => 'Finance Division Dashboard',
+        'Payroll Officer'                    => 'Payroll & HR Dashboard',
+        'Auditor'                            => 'Internal Audit Command Center',
+        'Procurement Officer'                => 'Procurement Unit Dashboard',
+        'Stadium Manager'                    => 'Stadium Management Dashboard',
+        'Department Head'                    => 'Departmental Dashboard',
+        'Director/Manager'                   => 'Departmental Dashboard',
+        'Supervisor'                         => 'Supervisor Dashboard',
+        'Employee'                           => 'Employee Self-Service Portal',
+        'Contractor'                         => 'Contractor Self-Service Portal',
+    ];
+
+    public const ROLE_TIERS = [
+        'Executive Leadership'         => ['Minister', 'Deputy Minister for Administration', 'System Administrator'],
+        'Human Resources & Data'       => ['Human Resource Director', 'Assistant HR Director', 'HR Officer', 'HR Data Analyst'],
+        'Finance, Audit & Procurement' => ['Finance Officer', 'Payroll Officer', 'Auditor', 'Procurement Officer'],
+        'Operations & Departments'     => ['Asset Manager', 'Stadium Manager', 'Director/Manager', 'Department Head', 'Supervisor'],
+        'Staff & Contractors'          => ['Employee', 'Contractor'],
     ];
 
     private function assignableRoles()
@@ -48,6 +77,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $tab = $request->query('tab', 'users');
         $query = User::with(['roles', 'employee.department']);
 
         if ($request->filled('search')) {
@@ -58,7 +88,8 @@ class UserController extends Controller
                   ->orWhereHas('employee', function ($eq) use ($search) {
                       $eq->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('employee_no', 'like', "%{$search}%");
+                        ->orWhere('employee_no', 'like', "%{$search}%")
+                        ->orWhere('designation', 'like', "%{$search}%");
                   });
             });
         }
@@ -69,23 +100,45 @@ class UserController extends Controller
             });
         }
 
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
         $users = $query->orderBy('name')->paginate(20)->withQueryString();
-        $roles = Role::orderBy('name')->get();
+        $roles = Role::with('permissions')->withCount('users')->orderBy('name')->get();
+        $rolesByName = $roles->keyBy('name');
 
         $roleCounts = [
-            'admins'       => User::role('System Administrator')->count(),
-            'hr_team'      => User::role(['Human Resource Director', 'Assistant HR Director', 'HR Officer', 'HR Data Analyst'])->count(),
-            'employees'    => User::role('Employee')->count(),
-            'contractors'  => User::role('Contractor')->count(),
+            'total_users' => User::count(),
+            'active'      => User::where('is_active', true)->count(),
+            'admins'      => User::role('System Administrator')->count(),
+            'executives'  => User::role(['Minister', 'Deputy Minister for Administration', 'Finance Officer', 'Auditor', 'Procurement Officer', 'Asset Manager', 'Stadium Manager'])->count(),
+            'hr_team'     => User::role(['Human Resource Director', 'Assistant HR Director', 'HR Officer', 'HR Data Analyst'])->count(),
+            'staff'       => User::role(['Employee', 'Contractor'])->count(),
+            'total_roles' => $roles->count(),
         ];
 
-        return view('users.index', compact('users', 'roles', 'roleCounts'));
+        $roleDescriptions = self::ROLE_DESCRIPTIONS;
+        $roleDashboards = self::ROLE_DASHBOARDS;
+        $roleTiers = self::ROLE_TIERS;
+
+        return view('users.index', compact(
+            'users',
+            'roles',
+            'rolesByName',
+            'roleCounts',
+            'roleDescriptions',
+            'roleDashboards',
+            'roleTiers',
+            'tab'
+        ));
     }
 
     public function create(Request $request)
     {
         $roles = $this->assignableRoles();
         $employees = Employee::active()
+            ->with('department')
             ->doesntHave('user')
             ->orderBy('first_name')
             ->get();
@@ -133,6 +186,7 @@ class UserController extends Controller
 
         $roles = $this->assignableRoles();
         $employees = Employee::active()
+            ->with('department')
             ->where(function ($q) use ($user) {
                 $q->doesntHave('user')->orWhereHas('user', fn ($sq) => $sq->where('id', $user->id));
             })
@@ -181,6 +235,23 @@ class UserController extends Controller
         AuditService::log('updated', User::class, $user->id, $old, $updateData, "Updated user: {$user->name} ({$data['role']})");
 
         return redirect()->route('users.index')->with('success', "User '{$user->name}' updated.");
+    }
+
+    public function toggleStatus(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+        if ($user->hasRole('System Administrator') && !auth()->user()->hasRole('System Administrator')) {
+            abort(403, 'Only a System Administrator can change another System Administrator status.');
+        }
+
+        $user->update(['is_active' => !$user->is_active]);
+        $state = $user->is_active ? 'activated' : 'deactivated';
+
+        AuditService::log('updated', User::class, $user->id, [], ['is_active' => $user->is_active], "Account {$state}: {$user->name}");
+
+        return back()->with('success', "Account '{$user->name}' has been {$state}.");
     }
 
     public function destroy(User $user)

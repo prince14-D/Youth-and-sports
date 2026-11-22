@@ -49,13 +49,18 @@
                         <i class="bi bi-building me-1"></i>{{ $employee->department?->name ?? 'Unassigned Department' }}
                     </p>
 
-                    <div class="d-flex justify-content-center gap-2 mb-4">
+                    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
                         <span class="badge font-monospace fw-bold px-3 py-2" style="font-size: 12px; color: #dc2626 !important; background-color: #fee2e2 !important; border: 1px solid #fca5a5 !important;">
                             ID: {{ $employee->employee_no }}
                         </span>
                         <x-ui.badge variant="{{ $employee->employment_status == 'Active' ? 'success' : 'warning' }}">
                             {{ $employee->employment_status }}
                         </x-ui.badge>
+                        @if($employee->user)
+                        <span class="badge bg-navy text-white px-2.5 py-2" style="font-size: 11.5px;">
+                            <i class="bi bi-shield-check me-1"></i>{{ $employee->user->primary_role }}
+                        </span>
+                        @endif
                     </div>
 
                     <div class="border-top pt-3 text-start small">
@@ -143,6 +148,16 @@
                             <div class="col-md-6">
                                 <label class="text-muted d-block small mb-1">Reporting Supervisor</label>
                                 <span class="fw-bold text-navy" style="font-size:14px;">{{ $employee->supervisor?->full_name ?? '—' }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block small mb-1">System Access Role</label>
+                                <span class="badge bg-navy text-white px-2.5 py-1.5">{{ $employee->user?->primary_role ?? 'No Portal Account' }}</span>
+                            </div>
+                            <div class="col-12">
+                                <label class="text-muted d-block small mb-1">Roles &amp; Key Responsibilities</label>
+                                <div class="p-3 rounded-3 bg-light border small text-dark" style="white-space: pre-line;">
+                                    {{ $employee->responsibilities ?: 'No specific job responsibilities documented yet. Edit employee profile to add official duties.' }}
+                                </div>
                             </div>
                         </div>
                     </div>

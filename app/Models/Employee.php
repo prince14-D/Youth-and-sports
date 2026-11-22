@@ -18,7 +18,7 @@ class Employee extends Model
         'employee_no', 'personnel_number', 'first_name', 'middle_name', 'last_name',
         'gender', 'date_of_birth', 'nationality', 'county_of_birth', 'marital_status',
         'address', 'phone', 'personal_email', 'official_email', 'photo_path',
-        'department_id', 'designation', 'job_title', 'employment_type',
+        'department_id', 'designation', 'job_title', 'responsibilities', 'employment_type',
         'employment_status', 'date_joined', 'contract_end_date',
         'salary_grade', 'salary_amount_lrd', 'salary_amount_usd',
         'bank_name', 'bank_account', 'tin_number', 'social_security_no',

@@ -96,6 +96,8 @@ class Create extends Component
     public $employment_type = 'Permanent';
     public $department_id = '';
     public $designation = '';
+    public $system_role = 'Employee';
+    public $responsibilities = '';
     public $salary_grade = '';
     public $date_joined = '';
     public $supervisor_id = '';
@@ -106,6 +108,13 @@ class Create extends Component
     {
         if (in_array($property, ['employment_type', 'date_joined', 'contract_duration'], true)) {
             $this->calculateContractEndDate();
+        }
+        if ($property === 'employment_type') {
+            if ($this->employment_type === 'Contract' && $this->system_role === 'Employee') {
+                $this->system_role = 'Contractor';
+            } elseif ($this->employment_type !== 'Contract' && $this->system_role === 'Contractor') {
+                $this->system_role = 'Employee';
+            }
         }
     }
 
@@ -177,6 +186,7 @@ class Create extends Component
             $this->employment_type = $requestedType;
             if ($requestedType === 'Contract') {
                 $this->is_existing_employee = false;
+                $this->system_role = 'Contractor';
                 $this->date_joined = now()->toDateString();
                 $this->calculateContractEndDate();
             }
@@ -465,6 +475,7 @@ class Create extends Component
                 'employment_type'    => $this->employment_type,
                 'department_id'      => $this->department_id,
                 'designation'        => trim($this->designation),
+                'responsibilities'   => trim((string) $this->responsibilities) ?: null,
                 'salary_grade'       => trim((string) $this->salary_grade) ?: null,
                 'date_joined'        => $this->date_joined ?: null,
                 'contract_end_date'  => $this->employment_type === 'Contract' ? $this->contract_end_date : null,
@@ -478,7 +489,7 @@ class Create extends Component
                 'created_by'         => auth()->id(),
             ]);
 
-            // 4. Create User linked account
+            // 4. Create User linked account with chosen System Role (Admins can be full employees too!)
             $user = User::create([
                 'name'                  => $employee->full_name,
                 'email'                 => $employee->official_email,
@@ -487,7 +498,14 @@ class Create extends Component
                 'is_active'             => true,
                 'force_password_change' => true,
             ]);
-            $assignedRole = $employee->employment_type === 'Contract' ? 'Contractor' : 'Employee';
+            $fallbackRole = $employee->employment_type === 'Contract' ? 'Contractor' : 'Employee';
+            $requestedRole = trim((string) $this->system_role) ?: $fallbackRole;
+            if ($requestedRole === 'System Administrator' && !auth()->user()?->hasRole('System Administrator')) {
+                $requestedRole = $fallbackRole;
+            }
+            $assignedRole = \Spatie\Permission\Models\Role::where('name', $requestedRole)->exists()
+                ? $requestedRole
+                : $fallbackRole;
             $user->assignRole($assignedRole);
             $welcomeUser = $user;
             $welcomeEmployee = $employee;
@@ -639,6 +657,13 @@ class Create extends Component
         $departments = Department::active()->orderBy('name')->get();
         $supervisors = Employee::active()->orderBy('first_name')->get();
 
-        return view('livewire.employees.create', compact('departments', 'supervisors'));
+        $roleQuery = \Spatie\Permission\Models\Role::orderBy('name');
+        if (!auth()->user()?->hasRole('System Administrator')) {
+            $roleQuery->where('name', '!=', 'System Administrator');
+        }
+        $assignableRoles = $roleQuery->get();
+        $roleDescriptions = \App\Http\Controllers\Admin\UserController::ROLE_DESCRIPTIONS;
+
+        return view('livewire.employees.create', compact('departments', 'supervisors', 'assignableRoles', 'roleDescriptions'));
     }
 }

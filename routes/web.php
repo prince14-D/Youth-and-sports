@@ -179,6 +179,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     // Users & Roles
     Route::middleware('can:view users')->group(function () {
+        Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('can:edit users');
         Route::resource('users', UserController::class);
     });
 

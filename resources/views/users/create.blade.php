@@ -41,16 +41,19 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Link to Employee / Contractor Profile</label>
-                    <select name="employee_id" class="form-select @error('employee_id') is-invalid @enderror">
+                    <select name="employee_id" id="employeeSelect" class="form-select @error('employee_id') is-invalid @enderror">
                         <option value="">Standalone Account (Optional)</option>
                         @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}" {{ old('employee_id') == $emp->id ? 'selected' : '' }}>
-                            {{ $emp->full_name }} ({{ $emp->employee_no }} &bull; {{ $emp->employment_type }})
+                        <option value="{{ $emp->id }}"
+                            data-name="{{ $emp->full_name }}"
+                            data-email="{{ $emp->official_email }}"
+                            {{ old('employee_id') == $emp->id ? 'selected' : '' }}>
+                            {{ $emp->full_name }} ({{ $emp->employee_no }} &bull; {{ $emp->department?->code ?? 'N/A' }} &bull; {{ $emp->employment_type }})
                         </option>
                         @endforeach
                     </select>
                     @error('employee_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    <div class="form-text">Optional for System Administrators; recommended for Staff &amp; Contractors.</div>
+                    <div class="form-text">Selecting an employee auto-fills their Full Name &amp; Official Email. Admins can also be linked to an employee profile!</div>
                 </div>
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center">
@@ -112,6 +115,16 @@ function updateRoleDescription() {
 }
 roleSelect?.addEventListener('change', updateRoleDescription);
 updateRoleDescription();
+
+const employeeSelect = document.getElementById('employeeSelect');
+employeeSelect?.addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    if (!opt || !opt.value) return;
+    const nameInput = document.querySelector('input[name="name"]');
+    const emailInput = document.querySelector('input[name="email"]');
+    if (nameInput && opt.dataset.name) nameInput.value = opt.dataset.name;
+    if (emailInput && opt.dataset.email) emailInput.value = opt.dataset.email;
+});
 
 function togglePasswordVisibility(id, btn) {
     const input = document.getElementById(id);

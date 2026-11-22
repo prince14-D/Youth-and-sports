@@ -376,6 +376,33 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold small text-navy">
+                                <i class="bi bi-shield-lock-fill text-primary me-1"></i>System Access Role <span class="text-danger">*</span>
+                            </label>
+                            <select wire:model.live="system_role" class="form-select @error('system_role') is-invalid @enderror">
+                                @foreach($assignableRoles as $role)
+                                    <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('system_role') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @if(!empty($roleDescriptions[$system_role]))
+                                <div class="form-text text-primary fw-medium mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>{{ $roleDescriptions[$system_role] }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-navy">
+                                <i class="bi bi-list-check text-success me-1"></i>Worker Roles &amp; Key Responsibilities (Job Duties)
+                            </label>
+                            <textarea wire:model.blur="responsibilities" rows="3" class="form-control @error('responsibilities') is-invalid @enderror"
+                                placeholder="Outline this worker's core duties, deliverables, and day-to-day responsibilities in the Ministry..."></textarea>
+                            @error('responsibilities') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div class="form-text">Displayed on the worker's official HR profile and self-service portal.</div>
+                        </div>
                     </div>
                 </div>
                 @endif
