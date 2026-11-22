@@ -14,6 +14,17 @@
         </x-slot:actions>
     </x-ui.page-header>
 
+    @if($employment_type === 'Contract')
+    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between gap-2 mb-4" style="border-radius:12px;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-person-fill fs-4 text-dark"></i>
+            <div>
+                <strong>Contractor &amp; Contract Registration Mode:</strong> Employment Type is pre-set to <strong>Contract</strong>. Set contract duration/end date on Step 2 and attach the signed agreement on Step 6. A Contractor Portal account will be provisioned automatically.
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Wizard Progress Bar Header -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">

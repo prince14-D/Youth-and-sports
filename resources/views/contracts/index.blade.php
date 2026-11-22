@@ -11,6 +11,18 @@
             <h1>Contract Management</h1>
             <p>Monitor contractors, contract expiry dates, renewal priorities, and employee profiles.</p>
         </div>
+        <div class="d-flex gap-2">
+            @can('create employees')
+            <a href="{{ route('employees.create', ['type' => 'Contract']) }}" class="btn btn-navy">
+                <i class="bi bi-file-earmark-plus me-1"></i>Register Contractor &amp; Contract
+            </a>
+            @endcan
+            @can('manage contract renewals')
+            <a href="{{ route('contracts.renewals') }}" class="btn btn-outline-navy">
+                <i class="bi bi-arrow-repeat me-1"></i>Contract Renewals
+            </a>
+            @endcan
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm">

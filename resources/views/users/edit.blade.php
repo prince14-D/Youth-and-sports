@@ -38,13 +38,14 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Role <span class="text-danger">*</span></label>
-                        <select name="role" class="form-select @error('role') is-invalid @enderror" required>
+                        <select name="role" id="editRoleSelect" class="form-select @error('role') is-invalid @enderror" required>
                             <option value="">Select Role</option>
                             @foreach($roles as $role)
-                            <option value="{{ $role->name }}" {{ old('role', $user->roles->first()?->name) == $role->name ? 'selected' : '' }}>{{ $role->name }}</option>
+                            <option value="{{ $role->name }}" data-desc="{{ $roleDescriptions[$role->name] ?? '' }}" {{ old('role', $user->roles->first()?->name) == $role->name ? 'selected' : '' }}>{{ $role->name }}</option>
                             @endforeach
                         </select>
                         @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div id="editRoleDesc" class="form-text text-primary mt-1 fw-medium">{{ $roleDescriptions[$user->roles->first()?->name ?? ''] ?? '' }}</div>
                     </div>
 
                     <div class="col-12 mt-4 pt-3 border-top">

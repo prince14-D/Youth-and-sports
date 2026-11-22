@@ -114,6 +114,59 @@ class Employee extends Model
         return $this->hasOne(AttendanceEnrollment::class);
     }
 
+    public function payrollRecords(): HasMany
+    {
+        return $this->hasMany(PayrollRecord::class);
+    }
+
+    public function assetAssignments(): HasMany
+    {
+        return $this->hasMany(AssetAssignment::class);
+    }
+
+    public function contractRenewals(): HasMany
+    {
+        return $this->hasMany(ContractRenewal::class);
+    }
+
+    public function trainings(): HasMany
+    {
+        return $this->hasMany(EmployeeTraining::class);
+    }
+
+    public function appraisals(): HasMany
+    {
+        return $this->hasMany(PerformanceAppraisal::class);
+    }
+
+    public function grievances(): HasMany
+    {
+        return $this->hasMany(Grievance::class);
+    }
+
+    public function isContractor(): bool
+    {
+        return $this->employment_type === 'Contract';
+    }
+
+    public function getContractDaysRemainingAttribute(): ?int
+    {
+        if (!$this->contract_end_date) {
+            return null;
+        }
+        return (int) today()->diffInDays($this->contract_end_date, false);
+    }
+
+    public function getContractProgressPercentAttribute(): ?int
+    {
+        if (!$this->date_joined || !$this->contract_end_date) {
+            return null;
+        }
+        $totalDays = max(1, $this->date_joined->diffInDays($this->contract_end_date));
+        $elapsed = max(0, min($totalDays, $this->date_joined->diffInDays(today(), false)));
+        return (int) round(($elapsed / $totalDays) * 100);
+    }
+
     // ─── Scopes ──────────────────────────────────────────────────────────────
 
     public function scopeActive($query)

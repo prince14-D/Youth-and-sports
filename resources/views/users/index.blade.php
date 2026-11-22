@@ -7,16 +7,95 @@
 <div class="animate-in">
     <x-ui.page-header
         title="System Users & Roles"
-        subtitle="Manage administrative and employee accounts, and assign role-based permissions."
+        subtitle="Manage Administrator, HR leadership, HR Officer, HR Data Analyst, Employee, and Contractor accounts."
     >
         <x-slot:actions>
             @can('create users')
+            @role('System Administrator')
+            <a href="{{ route('users.create', ['role' => 'System Administrator']) }}" class="btn btn-navy">
+                <i class="bi bi-shield-plus me-1"></i>Create Admin Account
+            </a>
+            <a href="{{ route('users.create', ['role' => 'Asset Manager']) }}" class="btn btn-outline-success">
+                <i class="bi bi-box-seam me-1"></i>Add Asset Manager
+            </a>
+            <a href="{{ route('users.create', ['role' => 'Finance Officer']) }}" class="btn btn-outline-primary">
+                <i class="bi bi-bank2 me-1"></i>Add Finance Officer
+            </a>
+            <a href="{{ route('users.create', ['role' => 'Auditor']) }}" class="btn btn-outline-danger">
+                <i class="bi bi-shield-exclamation me-1"></i>Add Internal Auditor
+            </a>
+            <a href="{{ route('users.create', ['role' => 'Procurement Officer']) }}" class="btn btn-outline-warning">
+                <i class="bi bi-cart-check me-1"></i>Add Procurement Officer
+            </a>
+            <a href="{{ route('users.create', ['role' => 'Stadium Manager']) }}" class="btn btn-outline-info">
+                <i class="bi bi-trophy me-1"></i>Add Stadium Manager
+            </a>
+            @endrole
+            <a href="{{ route('users.create', ['role' => 'HR Officer']) }}" class="btn btn-outline-navy">
+                <i class="bi bi-person-badge me-1"></i>Add HR Officer
+            </a>
             <x-ui.button variant="accent" icon="bi bi-person-plus" :href="route('users.create')">
                 Add System User
             </x-ui.button>
             @endcan
         </x-slot:actions>
     </x-ui.page-header>
+
+    {{-- Role Summary Strip --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small">System Admins</div>
+                        <div class="fs-4 fw-bold text-navy">{{ $roleCounts['admins'] ?? 0 }}</div>
+                    </div>
+                    <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
+                        <i class="bi bi-shield-lock-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small">HR Team &amp; Analyst</div>
+                        <div class="fs-4 fw-bold text-primary">{{ $roleCounts['hr_team'] ?? 0 }}</div>
+                    </div>
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
+                        <i class="bi bi-people-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small">Employee Accounts</div>
+                        <div class="fs-4 fw-bold text-success">{{ $roleCounts['employees'] ?? 0 }}</div>
+                    </div>
+                    <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
+                        <i class="bi bi-person-vcard-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small">Contractor Accounts</div>
+                        <div class="fs-4 fw-bold text-warning">{{ $roleCounts['contractors'] ?? 0 }}</div>
+                    </div>
+                    <div class="rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
+                        <i class="bi bi-file-earmark-person-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Search & Filter Card --}}
     <x-ui.card class="mb-4" bodyClass="p-3">

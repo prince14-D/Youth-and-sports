@@ -114,7 +114,7 @@
             display: block;
         }
         .sidebar-brand-text .subtitle {
-            color: rgba(18, 63, 122, 0.75);
+            color: rgba(255, 255, 255, 0.72);
             font-size: 9.5px;
             font-weight: 700;
             letter-spacing: 0.9px;
@@ -181,8 +181,8 @@
             color: rgba(255,255,255,.6);
         }
         .sidebar-submenu .nav-link.active {
-            background: rgba(18, 63, 122, 0.18);
-            color: #123F7A;
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
             font-weight: 600;
         }
         .sidebar-submenu .nav-link:hover { color: rgba(255,255,255,.85); }
@@ -576,6 +576,29 @@
             #main-content { margin-left: 0; }
             .topbar-toggle { display: flex !important; }
         }
+        @media (max-width: 767.98px) {
+            #topbar { padding: 0 12px; gap: 8px; }
+            #main-content { padding: 18px 14px; }
+            .page-header h1 { font-size: 18px; }
+            .page-header > .d-flex, .page-header > div:last-child { width: 100%; }
+            .page-header .btn { flex: 1 1 auto; }
+            .card-header { flex-wrap: wrap; padding: 12px 14px; }
+            .card-body { padding: 14px; }
+            .kpi-card { padding: 14px; gap: 12px; }
+            .kpi-info .kpi-value { font-size: 22px; }
+            .fs-2 { font-size: 1.5rem !important; }
+            .fs-3 { font-size: 1.3rem !important; }
+            /* Horizontally scrollable tab/pill rows instead of wrapping into tall stacks */
+            .nav-pills, .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; white-space: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+            .nav-pills .nav-link, .nav-tabs .nav-link { flex: 0 0 auto; }
+            .btn-group { flex-wrap: wrap; }
+            .modal-dialog { margin: .5rem; }
+            .modal-dialog.modal-lg, .modal-dialog.modal-xl { max-width: calc(100vw - 1rem); }
+            .modal-body { max-height: calc(100vh - 170px); overflow-y: auto; }
+            .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_length { text-align: left; float: none; }
+            pre, code { white-space: pre-wrap; word-break: break-word; }
+            .toast-container { left: 0; right: 0; }
+        }
         @media (max-width: 575.98px) {
             .card-body.p-4 { padding: 1rem !important; }
             .display-6 { font-size: 1.5rem; }
@@ -583,6 +606,21 @@
             .table-responsive { -webkit-overflow-scrolling: touch; }
             .btn-sm { padding: .4rem .7rem; }
             img, video, canvas { max-width: 100%; }
+            .table td, .table th { padding: .5rem .55rem; }
+            .table td { font-size: 12.5px; }
+            .form-steps { flex-wrap: wrap; }
+            .form-step { flex: 1 1 33%; }
+            .chart-wrapper { height: 220px; }
+            footer img { height: 36px !important; }
+        }
+        /* Any table not already wrapped scrolls instead of breaking the page width */
+        .table-auto-scroll { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        body { overflow-wrap: anywhere; }
+        .table, .card, .modal-content { overflow-wrap: normal; }
+        /* Tap-friendly controls on touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            .sidebar-nav .nav-link { padding: 12px; }
+            .btn, .form-control, .form-select { min-height: 40px; }
         }
 
         /* ── Sidebar overlay (mobile) ─────────────────────────── */
@@ -669,34 +707,143 @@
         </div>
     </a>
 
+    @php
+        $isSelfServiceUser = $authUser && $authUser->hasAnyRole(['Employee', 'Contractor']) && !$authUser->can('view employees');
+        $isContractorUser = $authUser && ($authUser->hasRole('Contractor') || ($authUser->employee && $authUser->employee->isContractor()));
+    @endphp
+
     <!-- Main Navigation -->
     <p class="sidebar-section-title">Main Menu</p>
     <ul class="sidebar-nav">
         <li class="nav-item">
-            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard', 'employee.dashboard', 'contractor.dashboard', 'hr-analyst.dashboard', 'minister.dashboard', 'dma.dashboard', 'assets.dashboard', 'finance.dashboard', 'internal-audit.dashboard', 'procurement.dashboard', 'stadium.dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2"></i> Dashboard
             </a>
         </li>
+        @if($authUser && $authUser->can('view minister dashboard') && !$authUser->hasRole('Minister'))
+        <li class="nav-item">
+            <a href="{{ route('minister.dashboard') }}" class="nav-link {{ request()->routeIs('minister.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-building-check"></i> Minister's Office
+            </a>
+        </li>
+        @endif
+        @if($authUser && $authUser->can('view dma dashboard') && !$authUser->hasRole('Deputy Minister for Administration'))
+        <li class="nav-item">
+            <a href="{{ route('dma.dashboard') }}" class="nav-link {{ request()->routeIs('dma.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-shield-check"></i> DMA Command Desk
+            </a>
+        </li>
+        @endif
+        @can('view document workflow')
+        <li class="nav-item">
+            <a href="#menuDocuments" class="nav-link {{ request()->is('documents*') ? 'active' : '' }}"
+               data-bs-toggle="collapse" aria-expanded="{{ request()->is('documents*') ? 'true' : 'false' }}">
+                <i class="bi bi-folder-symlink"></i> Document Workflow
+                <i class="bi bi-chevron-right nav-arrow"></i>
+            </a>
+            <ul class="sidebar-submenu collapse {{ request()->is('documents*') ? 'show' : '' }}" id="menuDocuments">
+                <li><a href="{{ route('documents.index') }}" class="nav-link {{ request()->routeIs('documents.index') ? 'active' : '' }}">Requests &amp; Files</a></li>
+                <li><a href="{{ route('documents.track') }}" class="nav-link {{ request()->routeIs('documents.track') ? 'active' : '' }}">Track Document Office</a></li>
+            </ul>
+        </li>
+        @endcan
+        @can('view leave')
+        <li class="nav-item">
+            <a href="{{ route('approvals.index') }}" class="nav-link {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
+                <i class="bi bi-diagram-3"></i> Approval Center
+            </a>
+        </li>
+        @endcan
+        @can('view employees')
+        <li class="nav-item">
+            <a href="{{ route('hr-alerts.index') }}" class="nav-link {{ request()->routeIs('hr-alerts.*') ? 'active' : '' }}">
+                <i class="bi bi-bell-fill"></i> Expiry &amp; Retirement Alerts
+            </a>
+        </li>
+        @endcan
+        @if($authUser && $authUser->can('create employees') && !$authUser->hasRole('HR Data Analyst'))
+        <li class="nav-item">
+            <a href="{{ route('hr-analyst.dashboard') }}" class="nav-link {{ request()->routeIs('hr-analyst.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-database-gear"></i> Data Analyst Desk
+            </a>
+        </li>
+        @endif
     </ul>
 
+    @if($isSelfServiceUser)
+    <p class="sidebar-section-title">{{ $isContractorUser ? 'Contractor Portal' : 'Employee Portal' }}</p>
+    <ul class="sidebar-nav">
+        <li class="nav-item">
+            <a href="{{ route('employee.profile') }}" class="nav-link {{ request()->routeIs('employee.profile') ? 'active' : '' }}">
+                <i class="bi bi-person-vcard"></i> My Profile
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('id-cards.mine') }}" class="nav-link {{ request()->routeIs('id-cards.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge"></i> {{ $isContractorUser ? 'My Contractor ID' : 'My Staff ID Card' }}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('employee.payslips') }}" class="nav-link {{ request()->routeIs('employee.payslips', 'payroll.payslip') ? 'active' : '' }}">
+                <i class="bi bi-receipt-cutoff"></i> {{ $isContractorUser ? 'My Payment Slips' : 'My Payslips' }}
+            </a>
+        </li>
+        @can('apply leave')
+        <li class="nav-item">
+            <a href="{{ route('leave.apply') }}" class="nav-link {{ request()->routeIs('leave.apply') ? 'active' : '' }}">
+                <i class="bi bi-calendar-plus"></i> Apply for Leave
+            </a>
+        </li>
+        @endcan
+        @can('submit excuse')
+        <li class="nav-item">
+            <a href="{{ route('excuses.index') }}" class="nav-link {{ request()->routeIs('excuses.*') ? 'active' : '' }}">
+                <i class="bi bi-shield-exclamation"></i> My Excuses
+            </a>
+        </li>
+        @endcan
+        @can('view internal vacancies')
+        <li class="nav-item">
+            <a href="{{ route('employee.recruitment') }}" class="nav-link {{ request()->routeIs('employee.recruitment') ? 'active' : '' }}">
+                <i class="bi bi-briefcase"></i> Internal Opportunities
+            </a>
+        </li>
+        @endcan
+        @can('view directory')
+        <li class="nav-item">
+            <a href="{{ route('directory.index') }}" class="nav-link {{ request()->routeIs('directory.index') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Staff Directory
+            </a>
+        </li>
+        @endcan
+        <li class="nav-item">
+            <a href="{{ route('employee.notifications') }}" class="nav-link {{ request()->routeIs('employee.notifications') ? 'active' : '' }}">
+                <i class="bi bi-bell"></i> My Notifications
+            </a>
+        </li>
+    </ul>
+    @else
     <p class="sidebar-section-title">Human Resources</p>
     <ul class="sidebar-nav">
         <!-- Employees -->
+        @can('view employees')
         <li class="nav-item">
-            <a href="#menuEmployees" class="nav-link {{ request()->is('employees*') ? 'active' : '' }}"
-               data-bs-toggle="collapse" aria-expanded="{{ request()->is('employees*') ? 'true' : 'false' }}">
-                <i class="bi bi-people"></i> Employees
+            <a href="#menuEmployees" class="nav-link {{ request()->is('employees*') || request()->is('contractors*') ? 'active' : '' }}"
+               data-bs-toggle="collapse" aria-expanded="{{ request()->is('employees*') || request()->is('contractors*') ? 'true' : 'false' }}">
+                <i class="bi bi-people"></i> Employees &amp; Contractors
                 <i class="bi bi-chevron-right nav-arrow"></i>
             </a>
             <ul class="sidebar-submenu collapse {{ request()->is('employees*') || request()->is('contractors*') ? 'show' : '' }}" id="menuEmployees">
                 <li><a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.index') ? 'active' : '' }}">All Employees</a></li>
                 <li><a href="{{ route('contractors.index') }}" class="nav-link {{ request()->routeIs('contractors.index') || request()->routeIs('contractors.show') ? 'active' : '' }}">Contractors</a></li>
                 @can('create employees')
-                <li><a href="{{ route('employees.create') }}" class="nav-link {{ request()->routeIs('employees.create') ? 'active' : '' }}">Add Employee</a></li>
+                <li><a href="{{ route('employees.create') }}" class="nav-link {{ request()->routeIs('employees.create') && request('type') !== 'Contract' ? 'active' : '' }}">Register Employee</a></li>
+                <li><a href="{{ route('employees.create', ['type' => 'Contract']) }}" class="nav-link {{ request()->routeIs('employees.create') && request('type') === 'Contract' ? 'active' : '' }}">Register Contractor</a></li>
                 <li><a href="{{ route('employees.import') }}" class="nav-link {{ request()->routeIs('employees.import') ? 'active' : '' }}">Bulk Import (CSV)</a></li>
                 @endcan
             </ul>
         </li>
+        @endcan
 
         <!-- Departments -->
         @can('view departments')
@@ -720,57 +867,59 @@
                 @can('view applications')<li><a href="{{ route('recruitment.applications') }}" class="nav-link {{ request()->routeIs('recruitment.applications') ? 'active' : '' }}">Applications</a></li>@endcan
             </ul>
         </li>
-        @endcan
-        @can('view internal vacancies')
-        <li class="nav-item">
-            <a href="{{ route('employee.recruitment') }}" class="nav-link {{ request()->routeIs('employee.recruitment') ? 'active' : '' }}">
-                <i class="bi bi-briefcase"></i> Internal Opportunities
-            </a>
-        </li>
-        @endcan
+        @endcanany
         @can('manage email communications')
         <li class="nav-item"><a href="{{ route('communications.email') }}" class="nav-link {{ request()->routeIs('communications.email') ? 'active' : '' }}"><i class="bi bi-envelope-paper"></i> HR Email Communications</a></li>
         @endcan
         @can('manage department communications')<li class="nav-item"><a href="{{ route('department-communications.index') }}" class="nav-link {{ request()->routeIs('department-communications.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i> Department Communications</a></li>@endcan
-        @can('view directory')<li class="nav-item"><a href="{{ route('directory.index') }}" class="nav-link"><i class="bi bi-people"></i> Employee Directory</a></li>@endcan
-        @can('view assets')<li class="nav-item"><a href="{{ route('assets.index') }}" class="nav-link"><i class="bi bi-box-seam"></i> Asset Management</a></li>@endcan
-        @can('view staff movements')<li class="nav-item"><a href="{{ route('staff-movements.index') }}" class="nav-link"><i class="bi bi-arrow-left-right"></i> Staff Movement</a></li>@endcan
-        @can('view contracts')<li class="nav-item"><a href="{{ route('contracts.index') }}" class="nav-link"><i class="bi bi-file-earmark-text"></i> Contract Management</a></li>@endcan
-        @can('manage contract renewals')<li class="nav-item"><a href="{{ route('contracts.renewals') }}" class="nav-link"><i class="bi bi-arrow-repeat"></i> Contract Renewals</a></li>@endcan
-        @can('view grievances')<li class="nav-item"><a href="{{ route('grievances.index') }}" class="nav-link"><i class="bi bi-shield-exclamation"></i> Grievances</a></li>@endcan
-
-        <!-- Attendance -->
-        @can('view attendance')
+        @can('view directory')<li class="nav-item"><a href="{{ route('directory.index') }}" class="nav-link {{ request()->routeIs('directory.index') ? 'active' : '' }}"><i class="bi bi-people"></i> Employee Directory</a></li>@endcan
+        @can('view assets')
         <li class="nav-item">
-            <a href="{{ route('attendance.index') }}" class="nav-link {{ request()->routeIs('attendance.index') ? 'active' : '' }}">
-                <i class="bi bi-calendar-check"></i> Attendance Dashboard
-            </a>
-        </li>
-        @endcan
-        <!-- Leave -->
-        @canany(['view leave', 'apply leave'])
-        <li class="nav-item">
-            <a href="#menuLeave" class="nav-link {{ request()->is('leave*') ? 'active' : '' }}"
-               data-bs-toggle="collapse" aria-expanded="{{ request()->is('leave*') ? 'true' : 'false' }}">
-                <i class="bi bi-calendar2-x"></i> Leave Management
+            <a href="#menuAssets" class="nav-link {{ request()->is('assets*') ? 'active' : '' }}"
+               data-bs-toggle="collapse" aria-expanded="{{ request()->is('assets*') ? 'true' : 'false' }}">
+                <i class="bi bi-box-seam"></i> Asset Management
                 <i class="bi bi-chevron-right nav-arrow"></i>
             </a>
-            <ul class="sidebar-submenu collapse {{ request()->is('leave*') ? 'show' : '' }}" id="menuLeave">
+            <ul class="sidebar-submenu collapse {{ request()->is('assets*') ? 'show' : '' }}" id="menuAssets">
+                <li><a href="{{ route('assets.dashboard') }}" class="nav-link {{ request()->routeIs('assets.dashboard') ? 'active' : '' }}">Asset Dashboard</a></li>
+                <li><a href="{{ route('assets.index') }}" class="nav-link {{ request()->routeIs('assets.index') ? 'active' : '' }}">Property Register</a></li>
+            </ul>
+        </li>
+        @endcan
+        @can('view staff movements')<li class="nav-item"><a href="{{ route('staff-movements.index') }}" class="nav-link {{ request()->routeIs('staff-movements.index') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i> Staff Movement</a></li>@endcan
+        @can('view contracts')<li class="nav-item"><a href="{{ route('contracts.index') }}" class="nav-link {{ request()->routeIs('contracts.index') ? 'active' : '' }}"><i class="bi bi-file-earmark-text"></i> Contract Management</a></li>@endcan
+        @can('manage contract renewals')<li class="nav-item"><a href="{{ route('contracts.renewals') }}" class="nav-link {{ request()->routeIs('contracts.renewals') ? 'active' : '' }}"><i class="bi bi-arrow-repeat"></i> Contract Renewals</a></li>@endcan
+        @can('view grievances')<li class="nav-item"><a href="{{ route('grievances.index') }}" class="nav-link {{ request()->routeIs('grievances.index') ? 'active' : '' }}"><i class="bi bi-shield-exclamation"></i> Grievances</a></li>@endcan
+
+        <!-- Leave & Excuses -->
+        @canany(['view leave', 'apply leave', 'submit excuse', 'view excuses'])
+        <li class="nav-item">
+            <a href="#menuLeave" class="nav-link {{ request()->is('leave*') || request()->is('excuses*') ? 'active' : '' }}"
+               data-bs-toggle="collapse" aria-expanded="{{ request()->is('leave*') || request()->is('excuses*') ? 'true' : 'false' }}">
+                <i class="bi bi-calendar2-x"></i> Leave &amp; Excuses
+                <i class="bi bi-chevron-right nav-arrow"></i>
+            </a>
+            <ul class="sidebar-submenu collapse {{ request()->is('leave*') || request()->is('excuses*') ? 'show' : '' }}" id="menuLeave">
                 @can('apply leave')<li><a href="{{ route('leave.apply') }}" class="nav-link {{ request()->routeIs('leave.apply') ? 'active' : '' }}">Apply Leave</a></li>@endcan
                 @can('view leave')<li><a href="{{ route('leave.approvals') }}" class="nav-link {{ request()->routeIs('leave.approvals') ? 'active' : '' }}">Approvals</a></li>@endcan
                 @can('manage leave types')<li><a href="{{ route('leave.types') }}" class="nav-link {{ request()->routeIs('leave.types') ? 'active' : '' }}">Leave Types</a></li>@endcan
                 @canany(['submit excuse', 'view excuses'])<li><a href="{{ route('excuses.index') }}" class="nav-link {{ request()->routeIs('excuses.*') ? 'active' : '' }}">Excuse Management</a></li>@endcanany
             </ul>
         </li>
-        @endcan
+        @endcanany
     </ul>
 
-    <p class="sidebar-section-title">Finance & Payroll</p>
+    @can('view payroll')
+    <p class="sidebar-section-title">Finance &amp; Payroll</p>
     <ul class="sidebar-nav">
-        @can('view payroll')
         <li class="nav-item">
             <a href="{{ route('finance.dashboard') }}" class="nav-link {{ request()->routeIs('finance.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Finance Dashboard
+                <i class="bi bi-bank2"></i> Finance Division
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('finance.ledger') }}" class="nav-link {{ request()->routeIs('finance.ledger') ? 'active' : '' }}">
+                <i class="bi bi-journal-bookmark"></i> Accounting Ledger
             </a>
         </li>
         <li class="nav-item">
@@ -781,11 +930,13 @@
             </a>
             <ul class="sidebar-submenu collapse {{ request()->is('payroll*') ? 'show' : '' }}" id="menuPayroll">
                 <li><a href="{{ route('payroll.index') }}" class="nav-link {{ request()->routeIs('payroll.index') ? 'active' : '' }}">Payroll Runs</a></li>
+                <li><a href="{{ route('external-attendance.index') }}" class="nav-link {{ request()->routeIs('external-attendance.*') ? 'active' : '' }}">External Attendance Sync</a></li>
             </ul>
         </li>
-        @endcan
     </ul>
+    @endcan
 
+    @canany(['view performance', 'view training'])
     <p class="sidebar-section-title">Development</p>
     <ul class="sidebar-nav">
         @can('view performance')
@@ -803,7 +954,9 @@
         </li>
         @endcan
     </ul>
+    @endcanany
 
+    @canany(['view reports', 'view users', 'view internal audit', 'view procurement', 'view stadium management', 'view audit logs', 'manage system settings'])
     <p class="sidebar-section-title">System</p>
     <ul class="sidebar-nav">
         @can('view reports')
@@ -821,14 +974,35 @@
         @can('view users')
         <li class="nav-item">
             <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
-                <i class="bi bi-shield-person"></i> Users & Roles
+                <i class="bi bi-shield-person"></i> Users &amp; Roles
+            </a>
+        </li>
+        @endcan
+        @can('view internal audit')
+        <li class="nav-item">
+            <a href="{{ route('internal-audit.dashboard') }}" class="nav-link {{ request()->routeIs('internal-audit.*') ? 'active' : '' }}">
+                <i class="bi bi-shield-check"></i> Internal Audit Division
+            </a>
+        </li>
+        @endcan
+        @can('view procurement')
+        <li class="nav-item">
+            <a href="{{ route('procurement.dashboard') }}" class="nav-link {{ request()->routeIs('procurement.*') ? 'active' : '' }}">
+                <i class="bi bi-cart-check"></i> Procurement Unit
+            </a>
+        </li>
+        @endcan
+        @can('view stadium management')
+        <li class="nav-item">
+            <a href="{{ route('stadium.dashboard') }}" class="nav-link {{ request()->routeIs('stadium.*') ? 'active' : '' }}">
+                <i class="bi bi-trophy"></i> Stadium Management
             </a>
         </li>
         @endcan
         @can('view audit logs')
         <li class="nav-item">
             <a href="{{ route('audit.index') }}" class="nav-link {{ request()->is('audit*') ? 'active' : '' }}">
-                <i class="bi bi-journal-text"></i> Audit Logs
+                <i class="bi bi-journal-text"></i> System Audit Trail
             </a>
         </li>
         @endcan
@@ -840,6 +1014,8 @@
         </li>
         @endcan
     </ul>
+    @endcanany
+    @endif
 
     <!-- Sidebar Footer -->
     <div class="sidebar-footer mt-auto" style="padding: 14px; border-top: 1px solid rgba(255,255,255,.08);">
@@ -875,9 +1051,14 @@
 
 <!-- ══════════════════════════════════════════════════════ TOPBAR -->
 <header id="topbar">
-    <button class="topbar-toggle" id="sidebarToggle" style="margin-right: 15px;">
+    <button class="topbar-toggle" id="sidebarToggle" aria-label="Toggle navigation menu" style="margin-right: 6px;">
         <i class="bi bi-list"></i>
     </button>
+
+    <!-- Mobile Page Title -->
+    <div class="d-flex d-lg-none align-items-center text-truncate" style="min-width:0;">
+        <span class="fw-bold text-navy text-truncate" style="font-size:14px;">@yield('page-title', 'Dashboard')</span>
+    </div>
 
     <!-- Breadcrumbs -->
     <div class="d-none d-lg-flex align-items-center gap-2 text-muted small">
@@ -893,8 +1074,7 @@
         @php
             $sysNotifications = \App\Models\SystemNotification::latest()->take(6)->get();
             if ($sysNotifications->isEmpty()) {
-                \App\Models\SystemNotification::notify('System SaaS Upgrade Completed', 'Enterprise HRMIS dashboard & module views upgraded successfully.', 'bi-check-circle-fill', 'success', route('dashboard'));
-                \App\Models\SystemNotification::notify('Biometric Verification Active', 'Staff check-in and check-out verification logs are operational.', 'bi-fingerprint', 'primary', route('attendance.index'));
+                \App\Models\SystemNotification::notify('HRMIS Portal Ready', 'Ministry HRMIS executive dashboards, payslips, and contractor tools are active.', 'bi-check-circle-fill', 'success', route('dashboard'));
                 \App\Models\SystemNotification::notify('Civil Service Retirement Alert', 'Staff members approaching 60-year statutory retirement threshold.', 'bi-exclamation-triangle-fill', 'warning', route('analytics.index'));
                 $sysNotifications = \App\Models\SystemNotification::latest()->take(6)->get();
             }
@@ -966,6 +1146,7 @@
                     @endforelse
                 </div>
 
+                @can('view audit logs')
                 <!-- Footer -->
                 <div class="text-center py-3 bg-light border-top" style="background: #F8FAFC !important; border-color: #E2E8F0 !important;">
                     <a href="{{ route('audit.index') }}" class="small text-navy text-decoration-none font-weight-600 d-inline-flex align-items-center gap-1.5 hover-text-primary transition-all" style="font-size:12.5px;">
@@ -973,6 +1154,7 @@
                         <i class="bi bi-arrow-right text-primary"></i>
                     </a>
                 </div>
+                @endcan
             </div>
         </div>
 
@@ -1003,11 +1185,13 @@
                 <li><a class="dropdown-item py-2" href="{{ route('employee.profile') }}"><i class="bi bi-person me-2 text-primary"></i>My Profile</a></li>
                 <li><a class="dropdown-item py-2" href="{{ route('employee.payslips') }}"><i class="bi bi-wallet2 me-2 text-success"></i>My Payslips</a></li>
                 <li><a class="dropdown-item py-2" href="{{ route('employee.notifications') }}"><i class="bi bi-bell me-2 text-warning"></i>My Notifications</a></li>
-                @else
-                <li><a class="dropdown-item py-2" href="{{ route('users.index') }}"><i class="bi bi-person me-2 text-primary"></i>My Account Profile</a></li>
                 @endif
+                @can('view users')
                 <li><a class="dropdown-item py-2" href="{{ route('users.index') }}"><i class="bi bi-gear me-2 text-secondary"></i>System Users &amp; Roles</a></li>
+                @endcan
+                @can('view reports')
                 <li><a class="dropdown-item py-2" href="{{ route('reports.index') }}"><i class="bi bi-file-earmark-bar-graph me-2 text-info"></i>System Reports</a></li>
+                @endcan
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <form method="POST" action="{{ route('logout') }}">
@@ -1101,6 +1285,26 @@ sidebarToggle?.addEventListener('click', () => {
 sidebarOverlay?.addEventListener('click', () => {
     sidebar.classList.remove('show');
     sidebarOverlay.classList.remove('show');
+});
+// Close mobile sidebar after navigating (ignoring collapse toggles) or pressing Esc
+function closeMobileSidebar() {
+    sidebar.classList.remove('show');
+    sidebarOverlay.classList.remove('show');
+}
+sidebar?.addEventListener('click', (e) => {
+    const link = e.target.closest('a.nav-link');
+    if (link && !link.hasAttribute('data-bs-toggle') && window.innerWidth < 992) closeMobileSidebar();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobileSidebar(); });
+window.addEventListener('resize', () => { if (window.innerWidth >= 992) closeMobileSidebar(); });
+// Make any un-wrapped table horizontally scrollable on small screens
+document.querySelectorAll('#main-content table.table').forEach((t) => {
+    if (!t.closest('.table-responsive') && !t.closest('.dataTables_wrapper')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'table-responsive';
+        t.parentNode.insertBefore(wrap, t);
+        wrap.appendChild(t);
+    }
 });
 
 // Web Audio API Enterprise Notification Chime Synthesizer

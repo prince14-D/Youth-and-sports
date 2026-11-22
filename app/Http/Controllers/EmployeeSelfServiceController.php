@@ -42,8 +42,33 @@ class EmployeeSelfServiceController extends Controller
     {
         $employee = $request->user()->employee;
         abort_unless($employee, 403, 'Employee record not found for this account.');
-        $payslips = PayrollRecord::with('period')->where('employee_id', $employee->id)->latest()->get();
-        return view('employee.payslips', compact('employee', 'payslips'));
+
+        $selectedYear = $request->query('year');
+        $allPayslips = PayrollRecord::with('period')
+            ->where('employee_id', $employee->id)
+            ->latest()
+            ->get();
+
+        $availableYears = $allPayslips
+            ->map(fn ($p) => $p->period?->start_date?->year ?? $p->created_at?->year)
+            ->filter()
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        $payslips = $selectedYear
+            ? $allPayslips->filter(fn ($p) => (string) ($p->period?->start_date?->year ?? $p->created_at?->year) === (string) $selectedYear)
+            : $allPayslips;
+
+        $summary = [
+            'count'        => $payslips->count(),
+            'latest'       => $payslips->first(),
+            'total_net_lrd' => $payslips->sum('net_pay_lrd'),
+            'total_net_usd' => $payslips->sum('net_pay_usd'),
+            'total_ded_lrd' => $payslips->sum(fn ($p) => (float) $p->tax_lrd + (float) $p->pension_lrd + (float) $p->deductions_lrd),
+        ];
+
+        return view('employee.payslips', compact('employee', 'payslips', 'availableYears', 'selectedYear', 'summary'));
     }
 
     public function profilePdf(Request $request)

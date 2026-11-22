@@ -11,9 +11,16 @@
             <h1 class="h3 fw-bold text-navy mb-1">Contractor Directory</h1>
             <p class="text-muted mb-0 small">Track active and inactive contractors across the ministry.</p>
         </div>
-        <a href="{{ route('employees.index') }}" class="btn btn-white border rounded-pill px-3.5 py-2 text-navy fw-semibold">
-            <i class="bi bi-arrow-left me-1"></i>Back to Employees
-        </a>
+        <div class="d-flex gap-2">
+            @can('create employees')
+            <a href="{{ route('employees.create', ['type' => 'Contract']) }}" class="btn btn-navy rounded-pill px-3.5 py-2 fw-semibold">
+                <i class="bi bi-file-earmark-plus me-1"></i>Register Contractor &amp; Contract
+            </a>
+            @endcan
+            <a href="{{ route('employees.index') }}" class="btn btn-white border rounded-pill px-3.5 py-2 text-navy fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i>Back to Employees
+            </a>
+        </div>
     </div>
 
     <div class="row g-3 mb-4">

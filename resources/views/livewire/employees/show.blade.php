@@ -16,6 +16,9 @@
                 <i class="bi bi-pencil-square me-1"></i>Edit Profile
             </a>
             @endcan
+            <a href="{{ route('id-cards.show', $employee) }}" class="btn btn-outline-success" title="View & Print Official ID Card">
+                <i class="bi bi-person-badge me-1"></i>ID Card
+            </a>
             <a href="{{ route('employees.pdf', $employee) }}" class="btn btn-outline-danger" title="Download employee profile PDF">
                 <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
             </a>

@@ -10,9 +10,11 @@
             <h1>Apply for Leave</h1>
             <p>Submit a new leave application request for approval.</p>
         </div>
+        @can('view leave')
         <a href="{{ route('leave.approvals') }}" class="btn btn-outline-navy">
             <i class="bi bi-card-checklist me-1"></i>View Approvals
         </a>
+        @endcan
     </div>
 
     @if(session('success'))
@@ -44,15 +46,15 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Employee <span class="text-danger">*</span></label>
-                                <select name="employee_id" class="form-select @error('employee_id') is-invalid @enderror" required {{ auth()->user()->hasRole('Employee') ? 'disabled' : '' }}>
+                                <select name="employee_id" class="form-select @error('employee_id') is-invalid @enderror" required {{ auth()->user()->hasAnyRole(['Employee', 'Contractor']) && !auth()->user()->can('view leave') ? 'disabled' : '' }}>
                                     <option value="">Select Employee</option>
                                     @foreach($employees as $emp)
-                                    <option value="{{ $emp->id }}" {{ old('employee_id') == $emp->id ? 'selected' : '' }}>
+                                    <option value="{{ $emp->id }}" {{ old('employee_id', auth()->user()->employee_id) == $emp->id ? 'selected' : '' }}>
                                         {{ $emp->full_name }} ({{ $emp->employee_no }})
                                     </option>
                                     @endforeach
                                 </select>
-                                @if(auth()->user()->hasRole('Employee'))
+                                @if(auth()->user()->hasAnyRole(['Employee', 'Contractor']) && !auth()->user()->can('view leave'))
                                     <input type="hidden" name="employee_id" value="{{ auth()->user()->employee_id }}">
                                 @endif
                                 @error('employee_id')<div class="invalid-feedback">{{ $message }}</div>@enderror

@@ -171,6 +171,16 @@ class Create extends Component
         $this->certifications = [];
         $this->next_of_kin = [];
         $this->emergency_contacts = [];
+
+        $requestedType = request()->query('type');
+        if (in_array($requestedType, ['Permanent', 'Contract', 'Probation', 'Temporary', 'Intern'], true)) {
+            $this->employment_type = $requestedType;
+            if ($requestedType === 'Contract') {
+                $this->is_existing_employee = false;
+                $this->date_joined = now()->toDateString();
+                $this->calculateContractEndDate();
+            }
+        }
     }
 
     public function nextStep()
@@ -477,7 +487,8 @@ class Create extends Component
                 'is_active'             => true,
                 'force_password_change' => true,
             ]);
-            $user->assignRole('Employee');
+            $assignedRole = $employee->employment_type === 'Contract' ? 'Contractor' : 'Employee';
+            $user->assignRole($assignedRole);
             $welcomeUser = $user;
             $welcomeEmployee = $employee;
 

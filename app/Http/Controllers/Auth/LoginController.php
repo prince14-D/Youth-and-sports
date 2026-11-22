@@ -50,7 +50,7 @@ class LoginController extends Controller
         AuditService::log('login', User::class, $user->id, [], [], "User logged in: {$user->name}");
 
         // Check 2FA for admin roles
-        if ($user->hasRole(['System Administrator', 'Human Resource Director']) && $user->hasTwoFactorEnabled()) {
+        if ($user->hasRole(['System Administrator', 'Human Resource Director', 'Assistant HR Director']) && $user->hasTwoFactorEnabled()) {
             session(['2fa_user_id' => $user->id, '2fa_remember' => $request->boolean('remember')]);
             Auth::logout();
             return redirect()->route('2fa.challenge');

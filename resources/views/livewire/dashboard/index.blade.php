@@ -1,8 +1,23 @@
 <div class="animate-in">
-    <!-- Header with Date & Breadcrumb -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    @php
+        $authUser = auth()->user();
+        $roleName = $authUser?->primary_role ?? 'Administrator';
+        $dashboardHeading = match ($roleName) {
+            'Human Resource Director' => 'HR Director Executive Dashboard',
+            'Assistant HR Director'   => 'Assistant HR Director Dashboard',
+            'HR Officer'              => 'HR Officer Operations Dashboard',
+            'System Administrator'    => 'System Administrator Command Center',
+            default                   => 'Executive Dashboard',
+        };
+    @endphp
+
+    <!-- Header with Role Badge & Date -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-            <h1 class="h3 fw-bold text-navy mb-1">Executive Dashboard</h1>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h3 fw-bold text-navy mb-0">{{ $dashboardHeading }}</h1>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" style="font-size:11px;">{{ $roleName }}</span>
+            </div>
             <p class="text-muted mb-0 small">Human Resource Management Information System &mdash; Ministry of Youth and Sports</p>
         </div>
         <div class="bg-white border rounded-3 px-3 py-2 text-muted small d-flex align-items-center gap-2 shadow-xs">
@@ -11,66 +26,114 @@
         </div>
     </div>
 
-    <!-- Top Row: Executive KPI Cards (8 Grid Layout) -->
+    <!-- Role-Aware Quick Operations Strip -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="fw-semibold text-navy small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Runs &amp; Actions:</div>
+            <div class="d-flex flex-wrap gap-2">
+                @can('view leave')
+                    <a href="{{ route('approvals.index') }}" class="btn btn-sm btn-primary fw-semibold">
+                        <i class="bi bi-diagram-3-fill me-1"></i>Approval Center
+                    </a>
+                @endcan
+                @can('create employees')
+                    <a href="{{ route('employees.create') }}" class="btn btn-sm btn-navy"><i class="bi bi-person-plus me-1"></i>Register Employee</a>
+                    <a href="{{ route('employees.create', ['type' => 'Contract']) }}" class="btn btn-sm btn-outline-navy"><i class="bi bi-file-earmark-plus me-1"></i>Register Contractor</a>
+                @endcan
+                @can('approve leave')
+                    <a href="{{ route('leave.approvals') }}" class="btn btn-sm btn-outline-warning text-dark">
+                        <i class="bi bi-calendar2-check me-1"></i>Leave Approvals
+                        @if($pendingLeaveCount > 0)<span class="badge bg-danger ms-1">{{ $pendingLeaveCount }}</span>@endif
+                    </a>
+                @endcan
+                @can('approve excuses')
+                    <a href="{{ route('excuses.index') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-shield-exclamation me-1"></i>Excuse Reviews
+                        @if($pendingExcusesCount > 0)<span class="badge bg-danger ms-1">{{ $pendingExcusesCount }}</span>@endif
+                    </a>
+                @endcan
+                @can('manage contract renewals')
+                    <a href="{{ route('contracts.renewals') }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i>Renewals
+                        @if($pendingRenewalsCount > 0)<span class="badge bg-warning text-dark ms-1">{{ $pendingRenewalsCount }}</span>@endif
+                    </a>
+                @endcan
+                @can('view payroll')
+                    <a href="{{ route('payroll.index') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-cash-stack me-1"></i>Payroll Runs
+                        @if($pendingPayrollCount > 0)<span class="badge bg-primary ms-1">{{ $pendingPayrollCount }}</span>@endif
+                    </a>
+                @endcan
+                @can('create users')
+                    <a href="{{ route('users.create', ['role' => $authUser->hasRole('System Administrator') ? 'System Administrator' : 'HR Officer']) }}" class="btn btn-sm btn-accent">
+                        <i class="bi bi-shield-plus me-1"></i>{{ $authUser->hasRole('System Administrator') ? 'Create Admin / User' : 'Add HR Account' }}
+                    </a>
+                @endcan
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Row: Executive KPI Cards (8 Grid Layout - Attendance Removed) -->
     <div class="row g-3 mb-4">
         <!-- 1. Total Employees -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
-                title="Total Employees" 
+                title="Total Workforce" 
                 value="{{ number_format($headcount) }}" 
                 subtitle="All personnel records" 
                 badgeColor="#2563EB" 
                 badgeBg="#EFF6FF" 
                 :avatars="$activeAvatars" 
-                actionLabel="Read More" 
+                actionLabel="View All" 
                 actionUrl="{{ route('employees.index') }}" />
         </div>
 
         <!-- 2. Active Employees -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
-                title="Active Employees" 
+                title="Active Staff" 
                 value="{{ number_format($activeCount) }}" 
                 subtitle="Active employment status" 
                 badgeColor="#16A34A" 
                 badgeBg="#DCFCE7" 
-                :avatars="$activeAvatars" 
-                actionLabel="View All" 
+                trend="{{ $activeRate }}% Active"
+                trendType="up"
+                actionLabel="Directory" 
                 actionUrl="{{ route('employees.index', ['status' => 'Active']) }}" />
         </div>
 
-        <!-- 3. Present Today -->
+        <!-- 3. Active Contractors -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
-                title="Present Today" 
-                value="{{ number_format($presentToday) }}" 
-                subtitle="Verified present today" 
+                title="Active Contractors" 
+                value="{{ number_format($activeContractorsCount) }}" 
+                subtitle="{{ $expiringContractsCount }} expiring within 60 days" 
                 badgeColor="#0284C7" 
                 badgeBg="#E0F2FE" 
-                trend="{{ $attendanceRate }}% Rate" 
-                trendType="{{ $attendanceRate >= 75 ? 'up' : 'down' }}" 
-                actionLabel="Logs" 
-                actionUrl="{{ route('attendance.index') }}" />
+                trend="{{ $expiringContractsCount }} Due" 
+                trendType="{{ $expiringContractsCount == 0 ? 'up' : 'down' }}" 
+                actionLabel="Contracts" 
+                actionUrl="{{ route('contracts.index') }}" />
         </div>
 
-        <!-- 4. Absent Today -->
+        <!-- 4. Pending Excuses -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
-                title="Absent Today" 
-                value="{{ number_format($absentToday) }}" 
-                subtitle="Unverified presence today" 
+                title="Pending Excuses" 
+                value="{{ number_format($pendingExcusesCount) }}" 
+                subtitle="Submitted for HR review" 
                 badgeColor="#EF4444" 
                 badgeBg="#FEE2E2" 
-                trend="{{ $absentToday }} Staff" 
-                trendType="{{ $absentToday == 0 ? 'up' : 'down' }}" 
-                actionLabel="Log" 
-                actionUrl="{{ route('attendance.index') }}" />
+                trend="{{ $pendingExcusesCount }} Pending" 
+                trendType="{{ $pendingExcusesCount == 0 ? 'up' : 'down' }}" 
+                actionLabel="Review" 
+                actionUrl="{{ route('excuses.index') }}" />
         </div>
 
-        <!-- 4. Employees on Leave -->
+        <!-- 5. Employees on Leave -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
-                title="Employees on Leave" 
+                title="Staff on Leave" 
                 value="{{ number_format($onLeave) }}" 
                 subtitle="Active authorized leave" 
                 badgeColor="#D97706" 
@@ -81,7 +144,7 @@
                 actionUrl="{{ route('leave.approvals') }}" />
         </div>
 
-        <!-- 5. Pending Leave Requests -->
+        <!-- 6. Pending Leave Requests -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
                 title="Pending Leave" 
@@ -95,7 +158,7 @@
                 actionUrl="{{ route('leave.approvals') }}" />
         </div>
 
-        <!-- 6. Departments -->
+        <!-- 7. Departments -->
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
             <x-ui.kpi-card 
                 title="Departments" 
@@ -103,23 +166,10 @@
                 subtitle="Operational divisions" 
                 badgeColor="#7C3AED" 
                 badgeBg="#F3E8FF" 
-                trend="2 Units" 
+                trend="Active Units" 
                 trendType="neutral" 
                 actionLabel="Manage" 
                 actionUrl="{{ route('departments.index') }}" />
-        </div>
-
-        <!-- 7. New Employees -->
-        <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-            <x-ui.kpi-card 
-                title="New Employees" 
-                value="{{ number_format($newHiresThisMonth) }}" 
-                subtitle="Joined this month" 
-                badgeColor="#059669" 
-                badgeBg="#D1FAE5" 
-                :avatars="$newHireAvatars" 
-                actionLabel="Details" 
-                actionUrl="{{ route('employees.index') }}" />
         </div>
 
         <!-- 8. Retiring Soon -->
@@ -132,46 +182,42 @@
                 badgeBg="#FCE7F3" 
                 :avatars="$retiringAvatars" 
                 actionLabel="Report" 
-                actionUrl="{{ route('reports.index') }}" />
+                actionUrl="{{ route('reports.workforce') }}" />
         </div>
     </div>
 
-    <!-- Middle Section: Attendance Charts & Analytics -->
+    <!-- Middle Section: Workforce & Departmental Analytics (Live Data) -->
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
-                        <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Attendance Overview & Analytics</h5>
-                        <small class="text-muted" style="font-size: 11.5px;">Workforce presence trends and departmental distribution</small>
+                        <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Workforce Composition &amp; Departmental Distribution</h5>
+                        <small class="text-muted" style="font-size: 11.5px;">Live Ministry headcount across departments and employment categories</small>
                     </div>
-                    <div class="d-flex gap-2">
-                        <select class="form-select form-select-sm w-auto border bg-light text-muted fw-semibold">
-                            <option selected>Monthly</option>
-                            <option>Weekly</option>
-                            <option>Department</option>
-                        </select>
-                    </div>
+                    <a href="{{ route('reports.workforce') }}" class="btn btn-sm btn-outline-navy rounded-pill px-3">
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i>Full Workforce Report
+                    </a>
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-4 align-items-center">
                         <div class="col-12 col-md-7">
-                            <div class="position-relative" style="height: 280px; width: 100%;">
-                                <canvas id="kpiMetricsChart"></canvas>
+                            <div class="position-relative" style="height: 260px; width: 100%;">
+                                <canvas id="deptHeadcountChart"></canvas>
                             </div>
                         </div>
                         <div class="col-12 col-md-5 border-start-md ps-md-4">
-                            <div class="position-relative d-flex align-items-center justify-content-center mx-auto" style="width: 170px; height: 170px;">
-                                <canvas id="attendanceSummaryChart"></canvas>
+                            <div class="position-relative d-flex align-items-center justify-content-center mx-auto" style="width: 175px; height: 175px;">
+                                <canvas id="employmentMixChart"></canvas>
                                 <div class="position-absolute text-center">
-                                    <div class="fs-3 fw-bold text-navy lh-1">{{ $attendanceRate }}%</div>
-                                    <small class="text-muted fw-semibold" style="font-size:10.5px;">{{ $attendanceStatusLabel }}</small>
+                                    <div class="fs-3 fw-bold text-navy lh-1">{{ $activeCount }}</div>
+                                    <small class="text-muted fw-semibold" style="font-size:10.5px;">Active Staff</small>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center justify-content-around w-100 mt-3 text-center" style="font-size:11.5px;">
-                                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#2563EB;"></span><span class="text-muted fw-semibold">Present</span></div>
-                                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#F59E0B;"></span><span class="text-muted fw-semibold">Leave</span></div>
-                                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#EF4444;"></span><span class="text-muted fw-semibold">Absent</span></div>
+                                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#2563EB;"></span><span class="text-muted fw-semibold">Permanent ({{ $permanentCount }})</span></div>
+                                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#10B981;"></span><span class="text-muted fw-semibold">Contract ({{ $activeContractorsCount }})</span></div>
+                                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#F59E0B;"></span><span class="text-muted fw-semibold">Other ({{ $otherTypesCount }})</span></div>
                             </div>
                         </div>
                     </div>
@@ -184,17 +230,16 @@
     <div class="row g-4">
         <!-- COLUMN ONE: Recent Employees & Upcoming Birthdays -->
         <div class="col-12 col-lg-4">
-            <!-- Recent Employees -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-people me-2 text-primary"></i>Recent Employees</h5>
+                    <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-people me-2 text-primary"></i>Recent Registrations</h5>
                     <a href="{{ route('employees.index') }}" class="btn btn-sm btn-link p-0 text-decoration-none">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         @forelse($recentEmployees as $emp)
                         <div class="list-group-item px-3 py-3 d-flex align-items-center gap-3 border-bottom">
-                            @if($emp->photo_url)
+                            @if($emp->photo_path && file_exists(public_path("storage/{$emp->photo_path}")))
                             <img src="{{ $emp->photo_url }}" alt="{{ $emp->full_name }}" class="rounded-circle border" style="width:38px; height:38px; object-fit:cover;">
                             @else
                             <div class="rounded-circle bg-navy text-white d-flex align-items-center justify-content-center fw-bold border" style="width:38px; height:38px; font-size:13px;">
@@ -216,7 +261,6 @@
                 </div>
             </div>
 
-            <!-- Upcoming Birthdays -->
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-gift-fill me-2 text-warning"></i>Upcoming Birthdays</h5>
@@ -226,13 +270,9 @@
                     <div class="list-group list-group-flush">
                         @forelse($birthdays as $emp)
                         <div class="list-group-item px-3 py-3 d-flex align-items-center gap-3 border-bottom">
-                            @if($emp->photo_url)
-                            <img src="{{ $emp->photo_url }}" alt="{{ $emp->full_name }}" class="rounded-circle border" style="width:38px; height:38px; object-fit:cover;">
-                            @else
                             <div class="rounded-circle bg-navy text-white d-flex align-items-center justify-content-center fw-bold border" style="width:38px; height:38px; font-size:13px;">
                                 {{ strtoupper(substr($emp->first_name,0,1) . substr($emp->last_name,0,1)) }}
                             </div>
-                            @endif
                             <div style="flex:1;">
                                 <div class="fw-bold text-navy" style="font-size:13.5px;">{{ $emp->full_name }}</div>
                                 <div style="font-size:11.5px; color: #dc2626 !important;" class="fw-bold">{{ $emp->designation }}</div>
@@ -247,9 +287,8 @@
             </div>
         </div>
 
-        <!-- COLUMN TWO: Audit Logs & Tasks Checklist -->
+        <!-- COLUMN TWO: Things To Do & Audit Logs -->
         <div class="col-12 col-lg-4">
-            <!-- Things To Do Checklist -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-card-checklist me-2 text-primary"></i>Things To Do</h5>
@@ -290,7 +329,6 @@
                 </div>
             </div>
 
-            <!-- Recent Activity Audit Logs -->
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-journal-text me-2 text-primary"></i>Recent Audit Activity</h5>
@@ -313,9 +351,8 @@
             </div>
         </div>
 
-        <!-- COLUMN THREE: Leave Calendar, Holidays & Quick Statistics -->
+        <!-- COLUMN THREE: Staff on Leave & Quick HR Statistics -->
         <div class="col-12 col-lg-4">
-            <!-- Staff on Leave Calendar Feed -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
                     <div>
@@ -329,13 +366,9 @@
                         @forelse($onLeaveStaff as $leave)
                         <div class="p-3 border rounded-3 bg-light bg-opacity-50 d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-3">
-                                @if($leave->employee?->photo_url)
-                                <img src="{{ $leave->employee->photo_url }}" alt="Photo" class="rounded-circle" style="width:38px; height:38px; object-fit:cover;">
-                                @else
                                 <div class="bg-warning-subtle text-warning-emphasis rounded-circle d-flex align-items-center justify-content-center fw-bold border" style="width:38px; height:38px; font-size:12px;">
                                     {{ strtoupper(substr($leave->employee?->first_name ?? 'E',0,1) . substr($leave->employee?->last_name ?? 'S',0,1)) }}
                                 </div>
-                                @endif
                                 <div>
                                     <div class="fw-bold text-navy" style="font-size:13px;">{{ $leave->employee?->full_name }}</div>
                                     <small class="text-muted" style="font-size:11px;">
@@ -352,7 +385,6 @@
                 </div>
             </div>
 
-            <!-- Quick HR Statistics -->
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3">
                     <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-pie-chart-fill me-2 text-info"></i>Quick HR Statistics</h5>
@@ -360,19 +392,23 @@
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <span class="text-muted small">Active Personnel Rate</span>
-                        <span class="fw-bold text-success">100%</span>
+                        <span class="fw-bold text-success">{{ $activeRate }}%</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <span class="text-muted small">Monthly Work Hours</span>
-                        <span class="fw-bold text-navy">{{ $totalMonthlyWorkHoursFormatted }} hrs</span>
+                        <span class="text-muted small">New Hires This Month</span>
+                        <span class="fw-bold text-navy">{{ $newHiresThisMonth }} Staff</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <span class="text-muted small">Avg Hours / Staff</span>
-                        <span class="fw-bold text-navy">{{ $avgMonthlyWorkHoursPerEmployee }} hrs</span>
+                        <span class="text-muted small">Expiring Contracts (≤60d)</span>
+                        <span class="fw-bold {{ $expiringContractsCount > 0 ? 'text-danger' : 'text-success' }}">{{ $expiringContractsCount }} Contracts</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small">Pending Contract Renewals</span>
+                        <span class="fw-bold text-primary">{{ $pendingRenewalsCount }} Requests</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center py-2">
-                        <span class="text-muted small">Pending Approvals</span>
-                        <span class="fw-bold text-warning">{{ $pendingLeaveCount }} Requests</span>
+                        <span class="text-muted small">Pending Leave &amp; Excuses</span>
+                        <span class="fw-bold text-warning">{{ $pendingLeaveCount + $pendingExcusesCount }} Pending</span>
                     </div>
                 </div>
             </div>
@@ -392,20 +428,17 @@
                     <form wire:submit.prevent="createTask">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Task Title <span class="text-danger">*</span></label>
-                            <input type="text" wire:model.blur="newTaskTitle" class="form-control @error('newTaskTitle') is-invalid @enderror" placeholder="e.g. Review Attendance Logs">
+                            <input type="text" wire:model.blur="newTaskTitle" class="form-control @error('newTaskTitle') is-invalid @enderror" placeholder="e.g. Review Contractor Renewals">
                             @error('newTaskTitle') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label fw-bold">Description / Instructions</label>
                             <textarea wire:model.blur="newTaskDescription" rows="3" class="form-control" placeholder="Describe the details of this task..."></textarea>
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label fw-bold">Due Date</label>
                             <input type="date" wire:model.blur="newTaskDueDate" class="form-control">
                         </div>
-
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button type="button" wire:click="closeTaskModal" class="btn btn-outline-secondary">Cancel</button>
                             <button type="submit" class="btn btn-navy"><i class="bi bi-check-circle me-1"></i>Add Task</button>
@@ -420,110 +453,65 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', initCharts);
-document.addEventListener('livewire:navigated', initCharts);
+document.addEventListener('DOMContentLoaded', initWorkforceCharts);
+document.addEventListener('livewire:navigated', initWorkforceCharts);
 
-function initCharts() {
-    initAttendanceChart();
-    initKpiChart();
+function initWorkforceCharts() {
+    initEmploymentMixChart();
+    initDeptHeadcountChart();
 }
 
-function initAttendanceChart() {
-    const ctx = document.getElementById('attendanceSummaryChart');
+function initEmploymentMixChart() {
+    const ctx = document.getElementById('employmentMixChart');
     if (!ctx) return;
-
-    if (window.attendanceChartInstance) {
-        window.attendanceChartInstance.destroy();
+    if (window.employmentMixChartInstance) {
+        window.employmentMixChartInstance.destroy();
     }
-
-    window.attendanceChartInstance = new Chart(ctx, {
+    window.employmentMixChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Present', 'On Leave', 'Absent'],
+            labels: ['Permanent', 'Contract', 'Other'],
             datasets: [{
-                data: [{{ $presentToday }}, {{ $onLeave }}, {{ $absentToday }}],
-                backgroundColor: ['#2563EB', '#F59E0B', '#EF4444'],
+                data: [{{ $permanentCount }}, {{ $activeContractorsCount }}, {{ $otherTypesCount }}],
+                backgroundColor: ['#2563EB', '#10B981', '#F59E0B'],
                 borderWidth: 0,
                 hoverOffset: 4
             }]
         },
         options: {
-            cutout: '78%',
+            cutout: '76%',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: true }
-            }
+            plugins: { legend: { display: false }, tooltip: { enabled: true } }
         }
     });
 }
 
-function initKpiChart() {
-    const ctx = document.getElementById('kpiMetricsChart');
+function initDeptHeadcountChart() {
+    const ctx = document.getElementById('deptHeadcountChart');
     if (!ctx) return;
-
-    if (window.kpiChartInstance) {
-        window.kpiChartInstance.destroy();
+    if (window.deptHeadcountChartInstance) {
+        window.deptHeadcountChartInstance.destroy();
     }
-
-    window.kpiChartInstance = new Chart(ctx, {
+    window.deptHeadcountChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [
-                {
-                    label: 'Good',
-                    data: [75, 50, 86, 25, 75, 90],
-                    backgroundColor: '#22C55E',
-                    borderRadius: 4,
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.6
-                },
-                {
-                    label: 'Moderate',
-                    data: [50, 25, 60, 72, 64, 75],
-                    backgroundColor: '#2563EB',
-                    borderRadius: 4,
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.6
-                },
-                {
-                    label: 'Critical',
-                    data: [25, 35, 50, 5, 35, 50],
-                    backgroundColor: '#F97316',
-                    borderRadius: 4,
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.6
-                }
-            ]
+            labels: @json($deptLabels),
+            datasets: [{
+                label: 'Active Staff',
+                data: @json($deptCounts),
+                backgroundColor: '#123F7A',
+                borderRadius: 6,
+                barPercentage: 0.65
+            }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + '%';
-                        }
-                    }
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    min: 0,
-                    max: 100,
-                    ticks: {
-                        stepSize: 25,
-                        callback: function(value) { return value + '%'; }
-                    },
-                    grid: { color: '#f1f5f9' }
-                },
-                x: {
-                    grid: { display: false }
-                }
+                y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
             }
         }
     });
