@@ -4,7 +4,7 @@
     # Block direct web access to sensitive files and directories
     RewriteRule ^(\.env|\.git|composer\.(json|lock)|artisan|package\.json) - [F,L,NC]
 
-    # Route all requests cleanly to Laravel's public/ directory on Hostinger Shared Hosting
-    RewriteCond %{REQUEST_URI} !^/public/
+    # Route all requests cleanly to Laravel's public/ directory (works in root or subfolders like /hr/)
+    RewriteCond %{REQUEST_URI} !/public/
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
