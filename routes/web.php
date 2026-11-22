@@ -72,13 +72,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')
         ->middleware('can:view dashboard');
 
-    // Executive Office Dashboards (Minister & Deputy Minister for Administration)
+    // Executive Office Dashboards (Minister & Deputy Minister for Administration — restricted to each role)
     Route::get('/minister/dashboard', [MinisterDashboardController::class, 'index'])
         ->name('minister.dashboard')
-        ->middleware('can:view minister dashboard');
+        ->middleware(['can:view minister dashboard', 'role:Minister']);
     Route::get('/dma/dashboard', [DmaDashboardController::class, 'index'])
         ->name('dma.dashboard')
-        ->middleware('can:view dma dashboard');
+        ->middleware(['can:view dma dashboard', 'role:Deputy Minister for Administration']);
 
     // Paperless Ministry Document & Request Workflow (with strict marked-office visibility & tracking query)
     Route::middleware('can:view document workflow')->group(function () {
@@ -112,8 +112,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/id-cards/{employee}', [StaffIdCardController::class, 'show'])->name('id-cards.show');
     Route::get('/id-cards/{employee}/pdf', [StaffIdCardController::class, 'downloadPdf'])->name('id-cards.pdf');
 
-    // HR Data Analyst Workspace
-    Route::middleware('can:create employees')->group(function () {
+    // HR Data Analyst Workspace (restricted to HR Data Analyst)
+    Route::middleware(['can:create employees', 'role:HR Data Analyst'])->group(function () {
         Route::get('/hr-analyst/dashboard', [HrDataAnalystDashboardController::class, 'index'])->name('hr-analyst.dashboard');
         Route::post('/hr-analyst/contracts/{employee}/quick-update', [HrDataAnalystDashboardController::class, 'quickUpdateContract'])->name('hr-analyst.contracts.quick-update');
     });
@@ -208,7 +208,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/grievances', [ComplianceController::class, 'grievances'])->name('grievances.index')->middleware('can:view grievances');
     Route::post('/grievances', [ComplianceController::class, 'grievanceStore'])->name('grievances.store')->middleware('can:manage grievances');
     Route::middleware('can:view assets')->group(function () {
-        Route::get('/assets/dashboard', [AssetDashboardController::class, 'index'])->name('assets.dashboard');
+        Route::get('/assets/dashboard', [AssetDashboardController::class, 'index'])->name('assets.dashboard')->middleware('role:Asset Manager');
         Route::get('/assets/export.csv', [AssetDashboardController::class, 'exportCsv'])->name('assets.export.csv');
         Route::post('/assets/maintenance', [AssetDashboardController::class, 'storeMaintenance'])->name('assets.maintenance.store')->middleware('can:manage assets');
         Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
@@ -231,7 +231,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
     });
 
-    Route::middleware('can:view internal audit')->group(function () {
+    Route::middleware(['can:view internal audit', 'role:Auditor|Minister|Deputy Minister for Administration'])->group(function () {
         Route::get('/internal-audit/dashboard', [InternalAuditController::class, 'dashboard'])->name('internal-audit.dashboard');
         Route::get('/internal-audit/report.pdf', [InternalAuditController::class, 'reportPdf'])->name('internal-audit.report.pdf');
         Route::get('/internal-audit/findings.csv', [InternalAuditController::class, 'exportFindingsCsv'])->name('internal-audit.findings.csv');
@@ -257,7 +257,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // Procurement Unit: tenders, bidding, bid evaluation, supplier registry & compliance
-    Route::middleware('can:view procurement')->prefix('procurement')->name('procurement.')->group(function () {
+    Route::middleware(['can:view procurement', 'role:Procurement Officer|Minister|Deputy Minister for Administration|Auditor'])->prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/dashboard', [ProcurementController::class, 'dashboard'])->name('dashboard');
         Route::get('/report.pdf', [ProcurementController::class, 'reportPdf'])->name('report.pdf');
         Route::get('/tenders.csv', [ProcurementController::class, 'exportTendersCsv'])->name('tenders.csv');
@@ -277,7 +277,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     });
 
     // Stadium Management: facilities, event preparation, maintenance work orders & safety inspections
-    Route::middleware('can:view stadium management')->prefix('stadium')->name('stadium.')->group(function () {
+    Route::middleware(['can:view stadium management', 'role:Stadium Manager|Minister|Deputy Minister for Administration|Auditor'])->prefix('stadium')->name('stadium.')->group(function () {
         Route::get('/dashboard', [StadiumManagementController::class, 'dashboard'])->name('dashboard');
         Route::get('/report.pdf', [StadiumManagementController::class, 'reportPdf'])->name('report.pdf');
         Route::get('/maintenance.csv', [StadiumManagementController::class, 'exportMaintenanceCsv'])->name('maintenance.csv');
@@ -315,7 +315,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
     Route::middleware('can:view payroll')->group(function () {
         // Finance Division Command Center, Budgets, Payment Vouchers, Accounting Ledger & Financial Reports
-        Route::get('/finance/dashboard', [FinanceDivisionController::class, 'dashboard'])->name('finance.dashboard');
+        Route::get('/finance/dashboard', [FinanceDivisionController::class, 'dashboard'])->name('finance.dashboard')->middleware('role:Finance Officer|Auditor');
         Route::get('/finance/ledger', [FinanceDivisionController::class, 'ledger'])->name('finance.ledger');
         Route::get('/finance/ledger.csv', [FinanceDivisionController::class, 'exportLedgerCsv'])->name('finance.ledger.csv');
         Route::get('/finance/report.pdf', [FinanceDivisionController::class, 'financialReportPdf'])->name('finance.report.pdf');

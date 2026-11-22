@@ -720,20 +720,6 @@
                 <i class="bi bi-grid-1x2"></i> Dashboard
             </a>
         </li>
-        @if($authUser && $authUser->can('view minister dashboard') && !$authUser->hasRole('Minister'))
-        <li class="nav-item">
-            <a href="{{ route('minister.dashboard') }}" class="nav-link {{ request()->routeIs('minister.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-building-check"></i> Minister's Office
-            </a>
-        </li>
-        @endif
-        @if($authUser && $authUser->can('view dma dashboard') && !$authUser->hasRole('Deputy Minister for Administration'))
-        <li class="nav-item">
-            <a href="{{ route('dma.dashboard') }}" class="nav-link {{ request()->routeIs('dma.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-shield-check"></i> DMA Command Desk
-            </a>
-        </li>
-        @endif
         @can('view document workflow')
         <li class="nav-item">
             <a href="#menuDocuments" class="nav-link {{ request()->is('documents*') ? 'active' : '' }}"
@@ -761,13 +747,6 @@
             </a>
         </li>
         @endcan
-        @if($authUser && $authUser->can('create employees') && !$authUser->hasRole('HR Data Analyst'))
-        <li class="nav-item">
-            <a href="{{ route('hr-analyst.dashboard') }}" class="nav-link {{ request()->routeIs('hr-analyst.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-database-gear"></i> Data Analyst Desk
-            </a>
-        </li>
-        @endif
     </ul>
 
     @if($isSelfServiceUser)
@@ -881,7 +860,9 @@
                 <i class="bi bi-chevron-right nav-arrow"></i>
             </a>
             <ul class="sidebar-submenu collapse {{ request()->is('assets*') ? 'show' : '' }}" id="menuAssets">
+                @role('Asset Manager')
                 <li><a href="{{ route('assets.dashboard') }}" class="nav-link {{ request()->routeIs('assets.dashboard') ? 'active' : '' }}">Asset Dashboard</a></li>
+                @endrole
                 <li><a href="{{ route('assets.index') }}" class="nav-link {{ request()->routeIs('assets.index') ? 'active' : '' }}">Property Register</a></li>
             </ul>
         </li>
@@ -912,11 +893,13 @@
     @can('view payroll')
     <p class="sidebar-section-title">Finance &amp; Payroll</p>
     <ul class="sidebar-nav">
+        @hasanyrole('Finance Officer|Auditor')
         <li class="nav-item">
             <a href="{{ route('finance.dashboard') }}" class="nav-link {{ request()->routeIs('finance.dashboard') ? 'active' : '' }}">
                 <i class="bi bi-bank2"></i> Finance Division
             </a>
         </li>
+        @endhasanyrole
         <li class="nav-item">
             <a href="{{ route('finance.ledger') }}" class="nav-link {{ request()->routeIs('finance.ledger') ? 'active' : '' }}">
                 <i class="bi bi-journal-bookmark"></i> Accounting Ledger
@@ -978,27 +961,27 @@
             </a>
         </li>
         @endcan
-        @can('view internal audit')
+        @if($authUser && $authUser->can('view internal audit') && !$authUser->hasRole('System Administrator') && !$authUser->hasRole('Auditor'))
         <li class="nav-item">
             <a href="{{ route('internal-audit.dashboard') }}" class="nav-link {{ request()->routeIs('internal-audit.*') ? 'active' : '' }}">
                 <i class="bi bi-shield-check"></i> Internal Audit Division
             </a>
         </li>
-        @endcan
-        @can('view procurement')
+        @endif
+        @if($authUser && $authUser->can('view procurement') && !$authUser->hasRole('System Administrator') && !$authUser->hasRole('Procurement Officer'))
         <li class="nav-item">
             <a href="{{ route('procurement.dashboard') }}" class="nav-link {{ request()->routeIs('procurement.*') ? 'active' : '' }}">
                 <i class="bi bi-cart-check"></i> Procurement Unit
             </a>
         </li>
-        @endcan
-        @can('view stadium management')
+        @endif
+        @if($authUser && $authUser->can('view stadium management') && !$authUser->hasRole('System Administrator') && !$authUser->hasRole('Stadium Manager'))
         <li class="nav-item">
             <a href="{{ route('stadium.dashboard') }}" class="nav-link {{ request()->routeIs('stadium.*') ? 'active' : '' }}">
                 <i class="bi bi-trophy"></i> Stadium Management
             </a>
         </li>
-        @endcan
+        @endif
         @can('view audit logs')
         <li class="nav-item">
             <a href="{{ route('audit.index') }}" class="nav-link {{ request()->is('audit*') ? 'active' : '' }}">
