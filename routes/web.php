@@ -253,6 +253,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware('can:manage system settings')->group(function () {
         Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/mail', [App\Http\Controllers\Admin\SettingsController::class, 'updateMail'])->name('settings.mail.update');
         Route::post('/settings/test-email', [App\Http\Controllers\Admin\SettingsController::class, 'sendTestEmail'])->name('settings.test-email');
     });
 

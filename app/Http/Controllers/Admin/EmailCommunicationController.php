@@ -59,7 +59,7 @@ class EmailCommunicationController extends Controller
             $communication->update(['status' => 'Sent', 'sent_at' => now()]);
         } catch (\Throwable $exception) {
             $communication->update(['status' => 'Failed', 'error_message' => $exception->getMessage()]);
-            return back()->with('error', 'The email could not be sent. Check SMTP settings and try again.');
+            return back()->with('error', 'Email failed via SMTP: ' . $exception->getMessage());
         }
 
         AuditService::log('created', EmailCommunication::class, $communication->id, [], $communication->toArray(), "HR email sent to {$recipients->count()} employee(s): {$data['subject']}");

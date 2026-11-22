@@ -4,18 +4,92 @@
 @section('breadcrumb', 'HRMS › System Settings')
 
 @section('content')
-<div class="animate-in" style="max-width: 1040px; margin: 0 auto;">
+<div class="animate-in" style="max-width: 1080px; margin: 0 auto;">
     <div class="page-header mb-4">
         <div>
-            <h1>System Configuration &amp; Email Settings</h1>
-            <p>Manage Ministry operational rules, Hostinger SMTP / email diagnostics, and system defaults.</p>
+            <h1>System Configuration &amp; SMTP Email Settings</h1>
+            <p>Manage Ministry operational rules, configure Hostinger SMTP email delivery, and test live email sending.</p>
         </div>
     </div>
 
+    @if($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-3">{{ $errors->first() }}</div>
+    @endif
+
     <div class="row g-4">
-        <!-- Main Settings Form -->
+        <!-- Left Column: Hostinger SMTP Configuration + Operational Rules -->
         <div class="col-12 col-lg-7">
+            <!-- Hostinger SMTP Configuration & Test -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-envelope-check me-2 text-success"></i>Hostinger SMTP Email Configuration</h5>
+                    <span class="badge {{ $mailConfig['mailer'] === 'smtp' ? 'bg-success' : 'bg-warning text-dark' }} text-uppercase">Driver: {{ $mailConfig['mailer'] }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ route('settings.mail.update') }}" method="POST" class="mb-4 pb-4 border-bottom">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-navy">SMTP Host <span class="text-danger">*</span></label>
+                                <input type="text" name="mail_host" class="form-control form-control-sm" value="{{ old('mail_host', $mailConfig['host']) }}" placeholder="smtp.hostinger.com" required>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-bold text-navy">Port <span class="text-danger">*</span></label>
+                                <select name="mail_port" class="form-select form-select-sm" required>
+                                    <option value="465" {{ (string)old('mail_port', $mailConfig['port']) === '465' ? 'selected' : '' }}>465 (SSL)</option>
+                                    <option value="587" {{ (string)old('mail_port', $mailConfig['port']) === '587' ? 'selected' : '' }}>587 (TLS)</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-bold text-navy">Encryption</label>
+                                <select name="mail_scheme" class="form-select form-select-sm">
+                                    <option value="smtps" {{ old('mail_scheme', $mailConfig['scheme']) === 'smtps' ? 'selected' : '' }}>SSL (smtps)</option>
+                                    <option value="null" {{ in_array(old('mail_scheme', $mailConfig['scheme']), ['', 'null', 'smtp'], true) ? 'selected' : '' }}>STARTTLS (auto)</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-navy">SMTP Email Username <span class="text-danger">*</span></label>
+                                <input type="email" name="mail_username" class="form-control form-control-sm" value="{{ old('mail_username', $mailConfig['username']) }}" placeholder="noreply@tecliberia.com" required>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-navy">SMTP Email Password</label>
+                                <input type="password" name="mail_password" class="form-control form-control-sm" placeholder="{{ $mailConfig['has_password'] ? '•••••••• (leave blank to keep current)' : 'Enter Hostinger mailbox password' }}">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-navy">From Email Address <span class="text-danger">*</span></label>
+                                <input type="email" name="mail_from_address" class="form-control form-control-sm" value="{{ old('mail_from_address', $mailConfig['from_address']) }}" placeholder="noreply@tecliberia.com" required>
+                                <div class="form-text" style="font-size:11px;">On Hostinger, this must match SMTP Username.</div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-navy">Sender Display Name <span class="text-danger">*</span></label>
+                                <input type="text" name="mail_from_name" class="form-control form-control-sm" value="{{ old('mail_from_name', $mailConfig['from_name']) }}" required>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-navy btn-sm px-4">
+                                <i class="bi bi-save me-1"></i>Save SMTP Settings
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Live SMTP Delivery Test -->
+                    <form action="{{ route('settings.test-email') }}" method="POST" class="row g-2 align-items-end">
+                        @csrf
+                        <div class="col-sm-8">
+                            <label class="form-label small fw-bold text-navy">Send Live SMTP Test Email</label>
+                            <input type="email" name="test_email" class="form-control form-control-sm" value="{{ auth()->user()?->email }}" placeholder="recipient@gmail.com" required>
+                        </div>
+                        <div class="col-sm-4">
+                            <button type="submit" class="btn btn-success btn-sm w-100 fw-semibold">
+                                <i class="bi bi-send-check me-1"></i>Test Delivery
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Operational Rules Form -->
+            <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3">
                     <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-sliders me-2 text-primary"></i>Operational Rules &amp; Work Hours</h5>
                 </div>
@@ -53,42 +127,6 @@
                     </form>
                 </div>
             </div>
-
-            <!-- Email / Hostinger SMTP Diagnostics & Test -->
-            <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-envelope-check me-2 text-success"></i>Email &amp; Hostinger SMTP Delivery</h5>
-                    <span class="badge bg-primary text-uppercase">{{ $mailConfig['mailer'] }}</span>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-2 small mb-3">
-                        <div class="col-sm-6"><div class="p-2 rounded bg-light"><span class="text-muted d-block">Active Driver</span><strong>{{ $mailConfig['mailer'] }}</strong></div></div>
-                        <div class="col-sm-6"><div class="p-2 rounded bg-light"><span class="text-muted d-block">SMTP Host / Port</span><strong>{{ $mailConfig['host'] }}:{{ $mailConfig['port'] }} ({{ $mailConfig['scheme'] }})</strong></div></div>
-                        <div class="col-sm-6"><div class="p-2 rounded bg-light"><span class="text-muted d-block">SMTP Username</span><strong class="text-break">{{ $mailConfig['username'] }}</strong></div></div>
-                        <div class="col-sm-6"><div class="p-2 rounded bg-light"><span class="text-muted d-block">From Address</span><strong class="text-break">{{ $mailConfig['from_address'] }}</strong></div></div>
-                    </div>
-
-                    @if($mailConfig['from_address'] === 'onboarding@resend.dev')
-                    <div class="alert alert-warning small py-2 mb-3">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                        <strong>Heads up:</strong> Currently using Resend sandbox address (<code>onboarding@resend.dev</code>), which only delivers to your Resend owner email. Switch <code>.env</code> to <strong>Hostinger SMTP</strong> (<code>smtp.hostinger.com</code>) before emailing all Ministry staff!
-                    </div>
-                    @endif
-
-                    <form action="{{ route('settings.test-email') }}" method="POST" class="row g-2 align-items-end">
-                        @csrf
-                        <div class="col-sm-8">
-                            <label class="form-label small fw-bold text-navy">Send Live Test Email</label>
-                            <input type="email" name="test_email" class="form-control form-control-sm" value="{{ auth()->user()?->email }}" placeholder="recipient@domain.com" required>
-                        </div>
-                        <div class="col-sm-4">
-                            <button type="submit" class="btn btn-success btn-sm w-100 fw-semibold">
-                                <i class="bi bi-send-check me-1"></i>Test Delivery
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
 
         <!-- Quick System Status Sidebar -->
@@ -118,19 +156,17 @@
 
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-header bg-transparent border-bottom py-3">
-                    <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-shield-check me-2 text-success"></i>Hostinger SMTP Quick Reference</h5>
+                    <h5 class="card-title mb-0 text-navy fw-bold"><i class="bi bi-shield-check me-2 text-success"></i>Hostinger SMTP Settings Reference</h5>
                 </div>
                 <div class="card-body p-4 small">
-                    <p class="text-muted mb-2">To send payslips, welcome logins, and HR alerts via your Hostinger domain email, update these lines in <code>.env</code>:</p>
-                    <pre class="p-2 rounded bg-light border mb-2" style="font-size:11px; white-space:pre-wrap;">MAIL_MAILER=smtp
-MAIL_SCHEME=smtps
-MAIL_HOST=smtp.hostinger.com
-MAIL_PORT=465
-MAIL_USERNAME=noreply@yourdomain.com
-MAIL_PASSWORD=YourMailboxPassword
-MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME="Ministry of Youth &amp; Sports HRMS"</pre>
-                    <div class="text-muted" style="font-size:11.5px;">After editing <code>.env</code>, run <code>php artisan config:clear</code> and click <strong>Test Delivery</strong>.</div>
+                    <ul class="ps-3 text-muted mb-3">
+                        <li><strong>SMTP Host:</strong> <code>smtp.hostinger.com</code></li>
+                        <li><strong>Port &amp; Security:</strong> <code>465</code> (SSL / <code>smtps</code>) or <code>587</code> (STARTTLS)</li>
+                        <li><strong>Username &amp; From:</strong> Must match a mailbox created in Hostinger hPanel › Emails (e.g. <code>noreply@tecliberia.com</code>)</li>
+                    </ul>
+                    <div class="alert alert-info py-2 mb-0" style="font-size:11.5px;">
+                        <i class="bi bi-info-circle me-1"></i>All system emails (Payslips, Welcome Logins, HR Broadcasts, Password Resets, and Contract Alerts) use this SMTP configuration automatically.
+                    </div>
                 </div>
             </div>
         </div>
